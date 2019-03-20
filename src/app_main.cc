@@ -17,7 +17,7 @@ int main(int argc, char* args[]) {
     printf("Going to partition %d into %d\n", toPart, n);
 
     PartitionBatch_t *partitionBatch = PartitionBatchInit(n, fname);
-    if (partitionBatch == NULL) { printf("Could not initialize."); return -1; }
+    if (partitionBatch == NULL) { printf("Could not initialize.\n"); return -1; }
 
     PartitionBatchPartition(partitionBatch, toPart, 1);
     return 0;
