@@ -59,7 +59,7 @@ void PartitionBatchDeinit(PartitionBatch_t *partitionBatch)
 }
 
 
-void PartitionBatchDump(PartitionBatch_t *partitionBatch, long *v, bool flush)
+void PartitionBatchDump(PartitionBatch_t *partitionBatch, long *v, bool forceFlush)
 {
     FILE *f   = partitionBatch->_file;
     char *_fp = partitionBatch->_fnameprefix;
@@ -69,8 +69,19 @@ void PartitionBatchDump(PartitionBatch_t *partitionBatch, long *v, bool flush)
 
     memcpy(partitionBatch->stack[*_sc], v, sizeof(long) * n);
 
-    if (++(*_sc) < BATCHSIZE && !flush)
+    if (++(*_sc) < BATCHSIZE && !forceFlush)
         return;
+    
+    PartitionBatchFlush(partitionBatch);
+}
+
+
+void PartitionBatchFlush(PartitionBatch_t *partitionBatch)
+{
+    FILE *f   = partitionBatch->_file;
+    int  *_sc = &(partitionBatch->_stackcounter);
+    int  *_bc = &(partitionBatch->_batchcounter);
+    int  n    = partitionBatch->n;
 
     __log_dbg_flush(*_bc);
 
@@ -90,7 +101,7 @@ void PartitionBatchDeterminantQ(PartitionBatch_t *partitionBatch, long *v)
 }
 
 
-void PartitionBatchPartition(PartitionBatch_t *partitionBatch, short toPart, int numWorkers) {
+void PartitionBatchPartition(PartitionBatch_t *partitionBatch, int toPart, int numWorkers) {
 
     int n = partitionBatch->n;
     long *v = (long *) malloc(sizeof(long) * n); // On stack, only const array sizes.
@@ -124,6 +135,7 @@ void PartitionBatchPartition(PartitionBatch_t *partitionBatch, short toPart, int
         PartitionBatchDeterminantQ(partitionBatch, v);
     }
 
+    PartitionBatchFlush(partitionBatch);
     free(v);
 }
 

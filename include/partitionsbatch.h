@@ -51,6 +51,11 @@ void PartitionBatchDeinit(PartitionBatch_t *partitionBatch);
 void PartitionBatchDump(PartitionBatch_t *partitionBatch, long *v, bool flush);
 
 /*
+    Flushes thr cotents to _file.
+*/
+void PartitionBatchFlush(PartitionBatch_t *partitionBatch);
+
+/*
     Calculates the condition. Case met,
     dumps to the stack using 'PartitionBatchDump()'.
 */
@@ -60,7 +65,7 @@ void PartitionBatchDeterminantQ(PartitionBatch_t *partitionBatch, long *v);
     Well, I suppose it partitions the thing
     after a few million loops.
 */
-void PartitionBatchPartition(PartitionBatch_t *partitionBatch, short toPart, int numWorkers);
+void PartitionBatchPartition(PartitionBatch_t *partitionBatch, int toPart, int numWorkers);
 
 
 #endif /* _PARTITIONSBATCH_H */
