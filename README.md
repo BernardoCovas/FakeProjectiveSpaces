@@ -8,7 +8,7 @@ $ git clone https://github.com/BernardoCovas/FakeProjectiveSpaces.git
 $ cd ./FakeProjectiveSpaces
 $ mkdir ./build
 $ cd ./build
-$ cmake .. -DCMAKE_BUILD_TY
+$ cmake .. -DCMAKE_BUILD_TYPE=Release
 $ cd PE=Release
 $ make -j
 ```
