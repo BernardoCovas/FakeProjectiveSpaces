@@ -9,6 +9,5 @@ $ cd ./FakeProjectiveSpaces
 $ mkdir ./build
 $ cd ./build
 $ cmake .. -DCMAKE_BUILD_TYPE=Release
-$ cd PE=Release
 $ make -j
 ```
