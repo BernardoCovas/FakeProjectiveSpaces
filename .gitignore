@@ -1,5 +1,8 @@
+# IDE folders and files
 .vscode
 .vs
+CMakeSettings.json
 
+# Expected build/install folders
 build
 bin
