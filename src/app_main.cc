@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "partitionsbatch.h"
+#include "fkps.h"
 
 int main(int argc, char* args[]) {
     
@@ -16,9 +16,11 @@ int main(int argc, char* args[]) {
     
     printf("Going to partition %d into %d\n", toPart, n);
 
-    PartitionBatch_t *partitionBatch = PartitionBatchInit(n, fname);
-    if (partitionBatch == NULL) { printf("Could not initialize.\n"); return -1; }
+    FakeProjectiveSpaces_t *fakeProjectiveSpaces = FakeProjectiveSpacesInit(n, fname);
+    if (fakeProjectiveSpaces == NULL) { printf("Could not initialize.\n"); return -1; }
 
-    PartitionBatchPartition(partitionBatch, toPart, 1);
-    return 0;
+    FakeProjectiveSpacesPartition(fakeProjectiveSpaces, toPart, 1);
+    FakeProjectiveSpacesDeInit(fakeProjectiveSpaces);
+    
+    return 0;   
 }
