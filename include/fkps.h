@@ -4,8 +4,6 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#include <Eigen/Dense>
-
 #define BATCHSIZE 1000000
 #define _PART_BCH_STR_LEN 256
 
@@ -24,43 +22,45 @@ typedef struct
 {
     long *stack[BATCHSIZE];
     int n;
-    
+
     char _fnameprefix[_PART_BCH_STR_LEN];
     int _stackcounter;
     int _batchcounter;
+
+    void *_mat; /* FkpsMat_t *_mat */
 
     FILE *_file;
 } FakeProjectiveSpaces_t;
 
 /* 
     Alocates an instance of PartitionBatchInit.
+    'filename' is the result output.
     Returns NULL if malloc() fails.
 */
 FakeProjectiveSpaces_t *FakeProjectiveSpacesInit(int n, char *filename);
 
 /* FakeProjectiveSpacesDeInit
-    Releases FakeProjectiveSpacesInit's resources.
+    Releases `FakeProjectiveSpacesInit`'s resources.
 */
 void FakeProjectiveSpacesDeInit(FakeProjectiveSpaces_t *projectiveSpaces);
 
 /*
-    Appends the vector v to the stack,
+    Appends the vector `v` to the stack,
     ocationally flushing it to the file
-    if it's bp is at BATCH_SIZE or if
-    'flush' is true.
+    if it's `_base_pointer` is at `BATCH_SIZE`
+    or if `flush` is true.
 */
 void FakeProjectiveSpacesDump(FakeProjectiveSpaces_t *projectiveSpaces, long *v, bool flush);
 
 /*
-    Flushes thr cotents to _file.
+    Flushes thr cotents to `_file`.
 */
 void FakeProjectiveSpacesFlush(FakeProjectiveSpaces_t *projectiveSpaces);
 
 /*
-    Calculates the condition. Case met,
-    dumps to the stack using 'FakeProjectiveSpacesDump()'.
+    Returns the determinant of the internal matrix `_mat`, after applying the parameters `v`.
 */
-void FakeProjectiveSpacesDeterminantQ(FakeProjectiveSpaces_t *projectiveSpaces, long *v);
+long FakeProjectiveSpacesDeterminantQ(FakeProjectiveSpaces_t *projectiveSpaces, long *v);
 
 /*
     Well, I suppose it partitions the thing

@@ -6,6 +6,8 @@
 #include "detfuncparsed.h"
 #include "fkps.h"
 
+#include "fkpsdefinitions.hh"
+
 #define BATCHSIZE 1000000
 #define _PART_BCH_STR_LEN 256
 
@@ -24,11 +26,13 @@ FakeProjectiveSpaces_t *FakeProjectiveSpacesInit(int n, char *filename)
     
     projectiveSpaces = (FakeProjectiveSpaces_t *) malloc(sizeof(FakeProjectiveSpaces_t));
     if (projectiveSpaces == NULL) { fclose(f); __log_err_malloc(); return NULL; };
-    
+
     projectiveSpaces->n = n;
     projectiveSpaces->_batchcounter = 0;
     projectiveSpaces->_stackcounter = 0;
     projectiveSpaces->_file = f;
+    
+    projectiveSpaces->_mat = (void *) new FkpsMat_t;
 
     char *fname = projectiveSpaces->_fnameprefix;
     strcpy_s(fname,  _PART_BCH_STR_LEN, filename);
@@ -54,6 +58,7 @@ void FakeProjectiveSpacesDeInit(FakeProjectiveSpaces_t *fakeProjectiveSpaces)
     for (int i=0; i<BATCHSIZE; i++)
         free(fakeProjectiveSpaces->stack[i]);
 
+    delete (FkpsMat_t *) fakeProjectiveSpaces->_mat;
     fclose(fakeProjectiveSpaces->_file);
     free(fakeProjectiveSpaces);
 }
@@ -94,12 +99,17 @@ void FakeProjectiveSpacesFlush(FakeProjectiveSpaces_t *projectiveSpaces)
 }
 
 
-void FakeProjectiveSpacesDeterminantQ(FakeProjectiveSpaces_t *projectiveSpaces, long *v)
+long FakeProjectiveSpacesDeterminantQ(FakeProjectiveSpaces_t *projectiveSpaces, long *v)
 {
-    if (DET_FUNC_PARSED_00(v) == 0)
-        FakeProjectiveSpacesDump(projectiveSpaces, v, false);
-}
+    FkpsMat_t *mat = (FkpsMat_t *) projectiveSpaces->_mat;
 
+    mat->resize(2, 2);
+    (*mat) << 4, 5, 6, 7;
+
+    (*mat)(1, 1) = 4;
+
+    return 0;
+}
 
 void FakeProjectiveSpacesPartition(FakeProjectiveSpaces_t *projectiveSpaces, int toPart, int numWorkers) {
 

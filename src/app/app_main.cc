@@ -7,7 +7,7 @@ int main(int argc, char* args[]) {
     
     if (argc != 4) {
         printf("Wrong number of arguments\n");
-        return 0;
+        return -1;
     }
 
     int toPart  = atoi(args[1]);
@@ -17,7 +17,7 @@ int main(int argc, char* args[]) {
     printf("Going to partition %d into %d\n", toPart, n);
 
     FakeProjectiveSpaces_t *fakeProjectiveSpaces = FakeProjectiveSpacesInit(n, fname);
-    if (fakeProjectiveSpaces == NULL) { printf("Could not initialize.\n"); return -1; }
+    if (fakeProjectiveSpaces == NULL) { printf("Could not initialize.\n"); return -2; }
 
     FakeProjectiveSpacesPartition(fakeProjectiveSpaces, toPart, 1);
     FakeProjectiveSpacesDeInit(fakeProjectiveSpaces);
