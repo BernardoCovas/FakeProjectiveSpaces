@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 
 project(FakeProjectiveSpaces)
 
+set (CMAKE_CXX_STANDARD 17)
 find_package(Eigen3 CONFIG REQUIRED)
 
 file( GLOB __CC_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cc )
