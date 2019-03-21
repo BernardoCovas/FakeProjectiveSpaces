@@ -1,15 +1,16 @@
-#ifndef _PARTITIONSBATCH_H
-#define _PARTITIONSBATCH_H
+#ifndef _FKPS_H
+#define _FKPS_H
 
 #include <stdbool.h>
 #include <stdio.h>
 
+#include <Eigen/Dense>
 
 #define BATCHSIZE 1000000
 #define _PART_BCH_STR_LEN 256
 
 /*
-    PartitionBatch_t base data structure.
+    FakeProjectiveSpaces_t base data structure.
     
     'stack' will hold several possible partitions until it
     is forced to flush them to '_file'.
@@ -29,18 +30,18 @@ typedef struct
     int _batchcounter;
 
     FILE *_file;
-} PartitionBatch_t;
+} FakeProjectiveSpaces_t;
 
 /* 
     Alocates an instance of PartitionBatchInit.
     Returns NULL if malloc() fails.
 */
-PartitionBatch_t *PartitionBatchInit(int n, char *filename);
+FakeProjectiveSpaces_t *FakeProjectiveSpacesInit(int n, char *filename);
 
-/* 
-    Releases PartitionBatchInit's resources.
+/* FakeProjectiveSpacesDeInit
+    Releases FakeProjectiveSpacesInit's resources.
 */
-void PartitionBatchDeinit(PartitionBatch_t *partitionBatch);
+void FakeProjectiveSpacesDeInit(FakeProjectiveSpaces_t *projectiveSpaces);
 
 /*
     Appends the vector v to the stack,
@@ -48,24 +49,24 @@ void PartitionBatchDeinit(PartitionBatch_t *partitionBatch);
     if it's bp is at BATCH_SIZE or if
     'flush' is true.
 */
-void PartitionBatchDump(PartitionBatch_t *partitionBatch, long *v, bool flush);
+void FakeProjectiveSpacesDump(FakeProjectiveSpaces_t *projectiveSpaces, long *v, bool flush);
 
 /*
     Flushes thr cotents to _file.
 */
-void PartitionBatchFlush(PartitionBatch_t *partitionBatch);
+void FakeProjectiveSpacesFlush(FakeProjectiveSpaces_t *projectiveSpaces);
 
 /*
     Calculates the condition. Case met,
-    dumps to the stack using 'PartitionBatchDump()'.
+    dumps to the stack using 'FakeProjectiveSpacesDump()'.
 */
-void PartitionBatchDeterminantQ(PartitionBatch_t *partitionBatch, long *v);
+void FakeProjectiveSpacesDeterminantQ(FakeProjectiveSpaces_t *projectiveSpaces, long *v);
 
 /*
     Well, I suppose it partitions the thing
     after a few million loops.
 */
-void PartitionBatchPartition(PartitionBatch_t *partitionBatch, int toPart, int numWorkers);
+void FakeProjectiveSpacesPartition(FakeProjectiveSpaces_t *projectiveSpaces, int toPart, int numWorkers);
 
 
-#endif /* _PARTITIONSBATCH_H */
+#endif /* _FKPS_H */
