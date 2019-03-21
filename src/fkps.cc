@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <iostream>
 
 #include "detfuncparsed.h"
 #include "fkps.h"
@@ -13,11 +14,11 @@
 
 
 void __log_err_malloc(void);
-void __log_err_fopen(char *fname);
+void __log_err_fopen(const char *fname);
 void __log_dbg_flush(int batch);
 
 
-FakeProjectiveSpaces_t *FakeProjectiveSpacesInit(int n, char *filename)
+FakeProjectiveSpaces_t *FakeProjectiveSpacesInit(int n, const char *filename)
 {
     FILE *f;
     if (fopen_s(&f, filename, "w") != 0) { __log_err_fopen(filename);  return NULL; }
@@ -40,7 +41,7 @@ FakeProjectiveSpaces_t *FakeProjectiveSpacesInit(int n, char *filename)
 
     for (int i=0; i<BATCHSIZE; i++)
     {
-        projectiveSpaces->stack[i] = (long *) malloc(sizeof(long) * n);
+        projectiveSpaces->stack[i] = (FkpsType_t *) malloc(sizeof(FkpsType_t) * n);
         if (projectiveSpaces->stack[i] == NULL)
         {
             FakeProjectiveSpacesDeInit(projectiveSpaces);
@@ -55,6 +56,7 @@ FakeProjectiveSpaces_t *FakeProjectiveSpacesInit(int n, char *filename)
 
 void FakeProjectiveSpacesDeInit(FakeProjectiveSpaces_t *fakeProjectiveSpaces)
 {
+    
     for (int i=0; i<BATCHSIZE; i++)
         free(fakeProjectiveSpaces->stack[i]);
 
@@ -64,7 +66,15 @@ void FakeProjectiveSpacesDeInit(FakeProjectiveSpaces_t *fakeProjectiveSpaces)
 }
 
 
-void FakeProjectiveSpacesDump(FakeProjectiveSpaces_t *fakeProjectiveSpaces, long *v, bool forceFlush)
+void FakeProjectiveSpacesMatLoadRandom(FakeProjectiveSpaces_t *fakeProjectiveSpaces)
+{
+    FkpsMat_t *mat = (FkpsMat_t *) fakeProjectiveSpaces->_mat;
+    mat->resize(20, 20);
+    mat->setRandom();
+}
+
+
+void FakeProjectiveSpacesDump(FakeProjectiveSpaces_t *fakeProjectiveSpaces, FkpsType_t *v, bool forceFlush)
 {
     FILE *f   = fakeProjectiveSpaces->_file;
     char *_fp = fakeProjectiveSpaces->_fnameprefix;
@@ -72,7 +82,7 @@ void FakeProjectiveSpacesDump(FakeProjectiveSpaces_t *fakeProjectiveSpaces, long
     int  *_bc = &(fakeProjectiveSpaces->_batchcounter);
     int  n    = fakeProjectiveSpaces->n;
 
-    memcpy(fakeProjectiveSpaces->stack[*_sc], v, sizeof(long) * n);
+    memcpy(fakeProjectiveSpaces->stack[*_sc], v, sizeof(FkpsType_t) * n);
 
     if (++(*_sc) < BATCHSIZE && !forceFlush)
         return;
@@ -99,34 +109,33 @@ void FakeProjectiveSpacesFlush(FakeProjectiveSpaces_t *projectiveSpaces)
 }
 
 
-long FakeProjectiveSpacesDeterminantQ(FakeProjectiveSpaces_t *projectiveSpaces, long *v)
+FkpsType_t FakeProjectiveSpacesDeterminantQ(FakeProjectiveSpaces_t *projectiveSpaces, FkpsType_t *v)
 {
     FkpsMat_t *mat = (FkpsMat_t *) projectiveSpaces->_mat;
-
-    mat->resize(2, 2);
-    (*mat) << 4, 5, 6, 7;
-
-    (*mat)(1, 1) = 4;
-
-    return 0;
+    return (mat->determinant());
 }
 
-void FakeProjectiveSpacesPartition(FakeProjectiveSpaces_t *projectiveSpaces, int toPart, int numWorkers) {
 
+void FakeProjectiveSpacesPartition(FakeProjectiveSpaces_t *projectiveSpaces, FkpsType_t toPart)
+{
     int n = projectiveSpaces->n;
-    long *v = (long *) malloc(sizeof(long) * n); // On stack, only const array sizes.
+    FkpsType_t *v = (FkpsType_t *) malloc(sizeof(FkpsType_t) * n); // On stack, only const array sizes.
     
     for (int j = 0; j < n; ++j) {
         v[j] = 1;
     }
     
-    long cap = toPart - n + 1;
-    long i, s;
-    
-    v[0] = cap;
 
     FakeProjectiveSpacesDeterminantQ(projectiveSpaces, v);
+
+    // TODO: N Partition.
     
+    /* 
+    
+    FkpsType_t cap = toPart - n + 1;
+    FkpsType_t i, s;
+    
+    v[0] = cap;
     while (v[n-1] != cap)
     {
         i = n;
@@ -145,6 +154,8 @@ void FakeProjectiveSpacesPartition(FakeProjectiveSpaces_t *projectiveSpaces, int
         FakeProjectiveSpacesDeterminantQ(projectiveSpaces, v);
     }
 
+    */
+
     FakeProjectiveSpacesFlush(projectiveSpaces);
     free(v);
 }
@@ -155,7 +166,7 @@ void __log_err_malloc()
     printf("ERR: Could not allocate enough resources.\n");
 }
 
-void __log_err_fopen(char *fname)
+void __log_err_fopen(const char *fname)
 {
     printf("ERR: Could not open: %s.\n", fname);
 }
