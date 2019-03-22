@@ -6,3 +6,4 @@ CMakeSettings.json
 # Expected build/install folders
 build
 bin
+data
