@@ -20,8 +20,8 @@ void __log_dbg_flush(int batch);
 
 FakeProjectiveSpaces_t *FakeProjectiveSpacesInit(int n, const char *filename)
 {
-    FILE *f;
-    if (fopen_s(&f, filename, "w") != 0) { __log_err_fopen(filename);  return NULL; }
+    FILE *f = fopen(filename, "w");
+    if (f ==  NULL) { __log_err_fopen(filename);  return NULL; }
 
     FakeProjectiveSpaces_t *projectiveSpaces;
     
@@ -36,7 +36,7 @@ FakeProjectiveSpaces_t *FakeProjectiveSpacesInit(int n, const char *filename)
     projectiveSpaces->_mat = (void *) new FkpsMat_t;
 
     char *fname = projectiveSpaces->_fnameprefix;
-    strcpy_s(fname,  _PART_BCH_STR_LEN, filename);
+    strncpy(fname, filename, _PART_BCH_STR_LEN);
     fname[_PART_BCH_STR_LEN - 1] = '\0'; // Allways null-terminate
 
     for (int i=0; i<BATCHSIZE; i++)
@@ -102,7 +102,7 @@ void FakeProjectiveSpacesFlush(FakeProjectiveSpaces_t *projectiveSpaces)
 
     for (int i = 0; i < *_sc; ++i)
         for (int j = 0; j < n; ++j)
-            fprintf(f, j==(n-1) ?"%ld\n":"%ld,", projectiveSpaces->stack[i][j]);
+            fprintf(f, j==(n-1) ?"%d\n":"%d,", (int) projectiveSpaces->stack[i][j]);
 
     (*_bc)++;
     (*_sc) = 0;
@@ -125,11 +125,10 @@ void FakeProjectiveSpacesPartition(FakeProjectiveSpaces_t *projectiveSpaces, Fkp
         v[j] = 1;
     }
     
-
-    FakeProjectiveSpacesDeterminantQ(projectiveSpaces, v);
-
     // TODO: N Partition.
-    
+    while(1)
+        FakeProjectiveSpacesDeterminantQ(projectiveSpaces, v);
+
     /* 
     
     FkpsType_t cap = toPart - n + 1;
