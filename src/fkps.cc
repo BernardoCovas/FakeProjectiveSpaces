@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <iostream>
 
-#include "detfuncparsed.h"
 #include "fkps.h"
 
 #include "fkpsdefinitions.hh"
