@@ -39,7 +39,7 @@ typedef struct
     int  _stackcounter;
     int  _batchcounter;
 
-    void *_mat; /* FkpsMat_t *_mat */
+    void *_mat; /* FkpsMat_t */
 
     FILE *_file;
 } FakeProjectiveSpaces_t;

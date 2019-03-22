@@ -32,7 +32,7 @@ int main(int argc, char* args[]) {
     int n            = atoi(args[2]);
     std::string path = std::string(args[3]);
 
-    printf("Going to partition %d into %d, %d at a time.\n", toPart, n, PARALELL_DET);
+    printf("Partitioning %d into %d, %d at a time.\n", toPart, n, PARALELL_DET);
 
     std::thread thread_v[PARALELL_DET];
     FakeProjectiveSpaces_t *fkps_v[PARALELL_DET];
