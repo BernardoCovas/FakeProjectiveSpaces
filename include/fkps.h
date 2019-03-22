@@ -10,14 +10,15 @@
 #define _PART_BCH_STR_LEN 256
 
 /*
-    FkpsDuplet_t base data structure.
+    FkpsTriplet_t base data structure.
     Represents one variable in the matrix.
 */
 typedef struct
 {
     int r;
     int c;
-} FkpsDuplet_t;
+    FkpsType_t val;
+} FkpsTriplet_t;
 
 /*
     FakeProjectiveSpaces_t base data structure.
@@ -33,6 +34,7 @@ typedef struct
 typedef struct
 {
     FkpsType_t *stack[BATCHSIZE];
+    FkpsTriplet_t *triplets;
     int n;
 
     char _fnameprefix[_PART_BCH_STR_LEN];
@@ -44,49 +46,87 @@ typedef struct
     FILE *_file;
 } FakeProjectiveSpaces_t;
 
-/* 
+/*
     Alocates an instance of PartitionBatchInit.
     'filename' is the result output.
     Returns NULL if malloc() fails.
 */
-FakeProjectiveSpaces_t *FakeProjectiveSpacesInit(int n, const char *filename);
+FakeProjectiveSpaces_t *FakeProjectiveSpacesInit(
+    int n,
+    const char *filename
+    );
 
 /* FakeProjectiveSpacesDeInit
     Releases `FakeProjectiveSpacesInit`'s resources.
 */
-void FakeProjectiveSpacesDeInit(FakeProjectiveSpaces_t *projectiveSpaces);
+void FakeProjectiveSpacesDeInit(
+    FakeProjectiveSpaces_t *projectiveSpaces
+    );
 
-/* 
-    Sets the internal `Eigen::Matrix` to
-    a random (20, 20) matrix.
+/**
+ * Sets the internal `Eigen::Matrix` to
+ * a random (20, 20) matrix.
 */
-void FakeProjectiveSpacesMatLoadRandom(FakeProjectiveSpaces_t *fakeProjectiveSpaces);
+void FakeProjectiveSpacesMatLoadRandom(
+    FakeProjectiveSpaces_t *fakeProjectiveSpaces
+    );
 
-/*
-    Appends the vector `v` to the stack,
-    ocationally flushing it to the file
-    if it's `_base_pointer` is at `BATCH_SIZE`
-    or if `flush` is true.
-*/
-void FakeProjectiveSpacesDump(FakeProjectiveSpaces_t *projectiveSpaces, FkpsType_t *v, bool flush);
+/**
+ * Assigns `triplet` to the internal matrix.
+ */
+bool FakeProjectiveSpacesAssignTriplets(
+    FakeProjectiveSpaces_t *fakeProjectiveSpaces,
+    FkpsTriplet_t *triplet
+    );
 
-/*
-    Flushes thr cotents to `_file`.
-*/
-void FakeProjectiveSpacesFlush(FakeProjectiveSpaces_t *projectiveSpaces);
+/**
+ * Assigns `n` items from`triplets`
+ * to the internal matrix.
+ * Returns `false` if any error occurs.
+ * If `false` is returned, no assignment
+ * was done.
+ */
+bool FakeProjectiveSpacesAssignTriplets(
+    FakeProjectiveSpaces_t *fakeProjectiveSpaces,
+    FkpsTriplet_t *triplets,
+    int n
+    );
 
-/*
-    Returns the determinant of the internal
-    `Eigen::Matrix`, after applying
-    the parameters `v`.
+/**
+ * Appends the vector `v` to the stack,
+ * ocationally flushing it to the file
+ * if it's `_base_pointer` is at `BATCH_SIZE`
+ * or if `flush` is true.
 */
-FkpsType_t FakeProjectiveSpacesDeterminantQ(FakeProjectiveSpaces_t *projectiveSpaces, FkpsType_t *v);
+void FakeProjectiveSpacesDump(
+    FakeProjectiveSpaces_t *projectiveSpaces,
+    FkpsType_t *v,
+    bool flush);
+
+/**
+ * Flushes the  cotents to `_file`.
+*/
+void FakeProjectiveSpacesFlush(
+    FakeProjectiveSpaces_t 
+    *projectiveSpaces
+    );
+
+/**
+ * Returns the determinant of the internal
+ * `Eigen::Matrix`.
+*/
+FkpsType_t FakeProjectiveSpacesDeterminantQ(
+    FakeProjectiveSpaces_t *projectiveSpaces
+    );
 
 /*
     Well, I suppose it partitions the thing
     after a few million loops.
 */
-void FakeProjectiveSpacesPartition(FakeProjectiveSpaces_t *projectiveSpaces, FkpsType_t toPart);
+void FakeProjectiveSpacesPartition(
+    FakeProjectiveSpaces_t *projectiveSpaces,
+    FkpsType_t toPart
+    );
 
 
 #endif /* _FKPS_H */

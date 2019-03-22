@@ -17,7 +17,12 @@ void __log_err_fopen(const char *fname);
 void __log_dbg_flush(int batch);
 
 
-FakeProjectiveSpaces_t *FakeProjectiveSpacesInit(int n, const char *filename)
+FakeProjectiveSpaces_t *FakeProjectiveSpacesInit(
+
+    int n,
+    const char *filename
+
+)
 {
     FILE *f = fopen(filename, "w");
     if (f ==  NULL) { __log_err_fopen(filename);  return NULL; }
@@ -53,9 +58,13 @@ FakeProjectiveSpaces_t *FakeProjectiveSpacesInit(int n, const char *filename)
 }
 
 
-void FakeProjectiveSpacesDeInit(FakeProjectiveSpaces_t *fakeProjectiveSpaces)
+void FakeProjectiveSpacesDeInit(
+
+    FakeProjectiveSpaces_t *fakeProjectiveSpaces
+
+)
 {
-    
+
     for (int i=0; i<BATCHSIZE; i++)
         free(fakeProjectiveSpaces->stack[i]);
 
@@ -65,7 +74,11 @@ void FakeProjectiveSpacesDeInit(FakeProjectiveSpaces_t *fakeProjectiveSpaces)
 }
 
 
-void FakeProjectiveSpacesMatLoadRandom(FakeProjectiveSpaces_t *fakeProjectiveSpaces)
+void FakeProjectiveSpacesMatLoadRandom(
+
+    FakeProjectiveSpaces_t *fakeProjectiveSpaces
+
+)
 {
     FkpsMat_t *mat = (FkpsMat_t *) fakeProjectiveSpaces->_mat;
     mat->resize(20, 20);
@@ -73,12 +86,53 @@ void FakeProjectiveSpacesMatLoadRandom(FakeProjectiveSpaces_t *fakeProjectiveSpa
 }
 
 
-void FakeProjectiveSpacesDump(FakeProjectiveSpaces_t *fakeProjectiveSpaces, FkpsType_t *v, bool forceFlush)
+bool FakeProjectiveSpacesAssignTriplet(
+
+    FakeProjectiveSpaces_t *fakeProjectiveSpaces,
+    FkpsTriplet_t *t
+
+)
 {
-    FILE *f   = fakeProjectiveSpaces->_file;
-    char *_fp = fakeProjectiveSpaces->_fnameprefix;
+    FkpsMat_t *mat = (FkpsMat_t *) fakeProjectiveSpaces->_mat;
+    (*mat)(t->r, t->c) = t->val;
+
+    return true;
+}
+
+
+bool FakeProjectiveSpacesAssignTriplets(
+
+    FakeProjectiveSpaces_t *fakeProjectiveSpaces,
+    FkpsTriplet_t *triplets,
+    int n
+
+)
+{
+    FkpsMat_t *mat = (FkpsMat_t *) fakeProjectiveSpaces->_mat;
+    FkpsType_t _n = fakeProjectiveSpaces->n;
+
+    if (n > _n)
+        return false;
+
+    for (int i=0; i<n; i++)
+    {
+        FkpsTriplet_t *d = triplets + i;
+        (*mat)(d->r, d->c) = d->val;
+    }
+
+    return true;
+}
+
+
+void FakeProjectiveSpacesDump(
+
+    FakeProjectiveSpaces_t *fakeProjectiveSpaces,
+    FkpsType_t *v,
+    bool forceFlush
+
+)
+{
     int  *_sc = &(fakeProjectiveSpaces->_stackcounter);
-    int  *_bc = &(fakeProjectiveSpaces->_batchcounter);
     int  n    = fakeProjectiveSpaces->n;
 
     memcpy(fakeProjectiveSpaces->stack[*_sc], v, sizeof(FkpsType_t) * n);
@@ -90,7 +144,11 @@ void FakeProjectiveSpacesDump(FakeProjectiveSpaces_t *fakeProjectiveSpaces, Fkps
 }
 
 
-void FakeProjectiveSpacesFlush(FakeProjectiveSpaces_t *projectiveSpaces)
+void FakeProjectiveSpacesFlush(
+
+    FakeProjectiveSpaces_t *projectiveSpaces
+
+)
 {
     FILE *f   = projectiveSpaces->_file;
     int  *_sc = &(projectiveSpaces->_stackcounter);
@@ -108,14 +166,23 @@ void FakeProjectiveSpacesFlush(FakeProjectiveSpaces_t *projectiveSpaces)
 }
 
 
-FkpsType_t FakeProjectiveSpacesDeterminantQ(FakeProjectiveSpaces_t *projectiveSpaces, FkpsType_t *v)
+FkpsType_t FakeProjectiveSpacesDeterminantQ(
+
+    FakeProjectiveSpaces_t *projectiveSpaces
+
+)
 {
     FkpsMat_t *mat = (FkpsMat_t *) projectiveSpaces->_mat;
     return (mat->determinant());
 }
 
 
-void FakeProjectiveSpacesPartition(FakeProjectiveSpaces_t *projectiveSpaces, FkpsType_t toPart)
+void FakeProjectiveSpacesPartition(
+
+    FakeProjectiveSpaces_t *projectiveSpaces,
+    FkpsType_t toPart
+
+)
 {
     int n = projectiveSpaces->n;
     FkpsType_t *v = (FkpsType_t *) malloc(sizeof(FkpsType_t) * n); // On stack, only const array sizes.
@@ -126,7 +193,7 @@ void FakeProjectiveSpacesPartition(FakeProjectiveSpaces_t *projectiveSpaces, Fkp
     
     // TODO: N Partition.
     while(1)
-        FakeProjectiveSpacesDeterminantQ(projectiveSpaces, v);
+        FakeProjectiveSpacesDeterminantQ(projectiveSpaces);
 
     /* 
     
