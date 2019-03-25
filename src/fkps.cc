@@ -41,9 +41,9 @@ FakeProjectiveSpaces_t *FakeProjectiveSpacesInit(
         projectiveSpaces->_file = f;
         projectiveSpaces->_mat = (void *) new FkpsMat_t;
 
-    FkpsPartition_t *partition = projectiveSpaces->partition;
-        partition = FkpsPartitionInit(n);
+    FkpsPartition_t *partition = FkpsPartitionInit(n);
         if (partition == NULL) { fclose(f); __log_err_malloc(); return NULL; };
+        projectiveSpaces->partition = partition;
 
     char *fname = projectiveSpaces->_fnameprefix;
     strncpy(fname, filename, _PART_BCH_STR_LEN);
