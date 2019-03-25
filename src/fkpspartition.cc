@@ -42,9 +42,9 @@ void FkpsPartitionRandomAssign(
 
     for (int i=0; i<partition->n; i++)
     {
-        triplets[i].r   = std::rand() / RAND_MAX * r;
-        triplets[i].c   = std::rand() / RAND_MAX * c;
-        triplets[i].val = std::rand() / RAND_MAX * maxVal;
+        triplets[i].r   = (float) std::rand() / RAND_MAX * r;
+        triplets[i].c   = (float) std::rand() / RAND_MAX * c;
+        triplets[i].val = (float) std::rand() / RAND_MAX * maxVal;
     }
 
 }
