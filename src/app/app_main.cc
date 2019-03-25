@@ -22,7 +22,7 @@ std::string AddInToFname(std::string path_s, int n)
 }
 
 int main(int argc, char* args[]) {
-    
+
     if (argc != 4) {
         printf("Wrong number of arguments\n");
         return -1;
@@ -44,10 +44,10 @@ int main(int argc, char* args[]) {
         
         FakeProjectiveSpacesMatLoadRandom(fkps_v[i]);
 
-        thread_v[i] = std::thread(&FakeProjectiveSpacesPartition, fkps_v[i], (FkpsType_t) toPart);
+        thread_v[i] = std::thread(&FakeProjectiveSpacesSolvePartial, fkps_v[i], (FkpsType_t) toPart);
     }
 
-    for (int i=0; i<8; i++)
+    for (int i=0; i<PARALELL_DET; i++)
     {
         thread_v[i].join();
         FakeProjectiveSpacesDeInit(fkps_v[i]);

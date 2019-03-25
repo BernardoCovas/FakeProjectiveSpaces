@@ -6,46 +6,6 @@
 
 #include "fkpscdefs.h"
 
-#define BATCHSIZE 1000000
-#define _PART_BCH_STR_LEN 256
-
-/*
-    FkpsTriplet_t base data structure.
-    Represents one variable in the matrix.
-*/
-typedef struct
-{
-    int r;
-    int c;
-    FkpsType_t val;
-} FkpsTriplet_t;
-
-/*
-    FakeProjectiveSpaces_t base data structure.
-    
-    'stack' will hold several possible partitions until it
-    is forced to flush them to '_file'.
-
-    '_stackcounter' holds the number of partitions already stored 
-    but not flushed.
-
-    '_batchcounter' holds the number of batches already dumped.
-*/
-typedef struct
-{
-    FkpsType_t *stack[BATCHSIZE];
-    FkpsTriplet_t *triplets;
-    int n;
-
-    char _fnameprefix[_PART_BCH_STR_LEN];
-    int  _stackcounter;
-    int  _batchcounter;
-
-    void *_mat; /* FkpsMat_t */
-
-    FILE *_file;
-} FakeProjectiveSpaces_t;
-
 /*
     Alocates an instance of PartitionBatchInit.
     'filename' is the result output.
@@ -74,7 +34,7 @@ void FakeProjectiveSpacesMatLoadRandom(
 /**
  * Assigns `triplet` to the internal matrix.
  */
-bool FakeProjectiveSpacesAssignTriplets(
+bool FakeProjectiveSpacesAssignTriplet(
     FakeProjectiveSpaces_t *fakeProjectiveSpaces,
     FkpsTriplet_t *triplet
     );
@@ -93,15 +53,14 @@ bool FakeProjectiveSpacesAssignTriplets(
     );
 
 /**
- * Appends the vector `v` to the stack,
+ * Appends the current tripolet to the stack,
  * ocationally flushing it to the file
  * if it's `_base_pointer` is at `BATCH_SIZE`
- * or if `flush` is true.
+ * or if `forceFlush` is true.
 */
 void FakeProjectiveSpacesDump(
     FakeProjectiveSpaces_t *projectiveSpaces,
-    FkpsType_t *v,
-    bool flush);
+    bool forceFlush);
 
 /**
  * Flushes the  cotents to `_file`.
@@ -120,10 +79,13 @@ FkpsType_t FakeProjectiveSpacesDeterminantQ(
     );
 
 /*
-    Well, I suppose it partitions the thing
-    after a few million loops.
+    Saves all the possible solutions to the
+    stack.
+    Runs on a loop.
+    It is NOT thread safe, so
+    one thread only per `FakeProjectiveSpaces_t`.
 */
-void FakeProjectiveSpacesPartition(
+void FakeProjectiveSpacesSolvePartial(
     FakeProjectiveSpaces_t *projectiveSpaces,
     FkpsType_t toPart
     );

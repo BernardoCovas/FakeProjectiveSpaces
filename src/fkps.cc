@@ -3,8 +3,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream>
+#include <random>
 
 #include "fkps.h"
+#include "fkpspartition.h"
 
 #include "fkpsdefinitions.hh"
 
@@ -28,31 +30,24 @@ FakeProjectiveSpaces_t *FakeProjectiveSpacesInit(
     if (f ==  NULL) { __log_err_fopen(filename);  return NULL; }
 
     FakeProjectiveSpaces_t *projectiveSpaces;
-    
+
+
     projectiveSpaces = (FakeProjectiveSpaces_t *) malloc(sizeof(FakeProjectiveSpaces_t));
     if (projectiveSpaces == NULL) { fclose(f); __log_err_malloc(); return NULL; };
 
-    projectiveSpaces->n = n;
-    projectiveSpaces->_batchcounter = 0;
-    projectiveSpaces->_stackcounter = 0;
-    projectiveSpaces->_file = f;
-    
-    projectiveSpaces->_mat = (void *) new FkpsMat_t;
+        projectiveSpaces->n = n;
+        projectiveSpaces->_batchcounter = 0;
+        projectiveSpaces->_stackcounter = 0;
+        projectiveSpaces->_file = f;
+        projectiveSpaces->_mat = (void *) new FkpsMat_t;
+
+    FkpsPartition_t *partition = projectiveSpaces->partition;
+        partition = FkpsPartitionInit(n);
+        if (partition == NULL) { fclose(f); __log_err_malloc(); return NULL; };
 
     char *fname = projectiveSpaces->_fnameprefix;
     strncpy(fname, filename, _PART_BCH_STR_LEN);
     fname[_PART_BCH_STR_LEN - 1] = '\0'; // Allways null-terminate
-
-    for (int i=0; i<BATCHSIZE; i++)
-    {
-        projectiveSpaces->stack[i] = (FkpsType_t *) malloc(sizeof(FkpsType_t) * n);
-        if (projectiveSpaces->stack[i] == NULL)
-        {
-            FakeProjectiveSpacesDeInit(projectiveSpaces);
-            __log_err_malloc();
-            return NULL;
-        }
-    }
 
     return projectiveSpaces;
 }
@@ -66,10 +61,12 @@ void FakeProjectiveSpacesDeInit(
 {
 
     for (int i=0; i<BATCHSIZE; i++)
-        free(fakeProjectiveSpaces->stack[i]);
+        free(&fakeProjectiveSpaces->stack[i]);
 
     delete (FkpsMat_t *) fakeProjectiveSpaces->_mat;
     fclose(fakeProjectiveSpaces->_file);
+
+    FkpsPartitionDeInit(fakeProjectiveSpaces->partition);
     free(fakeProjectiveSpaces);
 }
 
@@ -80,9 +77,15 @@ void FakeProjectiveSpacesMatLoadRandom(
 
 )
 {
+    // TODO (bcovas) rand int remove
+    int r = 20, c = 20;
+    int m = 20;
+
     FkpsMat_t *mat = (FkpsMat_t *) fakeProjectiveSpaces->_mat;
-    mat->resize(20, 20);
-    mat->setRandom();
+        mat->resize(r, c);
+        mat->setRandom();
+
+    FkpsPartitionRandomAssign(fakeProjectiveSpaces->partition, r, c, m);
 }
 
 
@@ -111,12 +114,15 @@ bool FakeProjectiveSpacesAssignTriplets(
     FkpsMat_t *mat = (FkpsMat_t *) fakeProjectiveSpaces->_mat;
     FkpsType_t _n = fakeProjectiveSpaces->n;
 
+    // TODO (bcovas): Temporary
+    assert(_n >= n);
+
     if (n > _n)
         return false;
 
     for (int i=0; i<n; i++)
     {
-        FkpsTriplet_t *d = triplets + i;
+        FkpsTriplet_t *d = &triplets[i];
         (*mat)(d->r, d->c) = d->val;
     }
 
@@ -127,15 +133,12 @@ bool FakeProjectiveSpacesAssignTriplets(
 void FakeProjectiveSpacesDump(
 
     FakeProjectiveSpaces_t *fakeProjectiveSpaces,
-    FkpsType_t *v,
     bool forceFlush
 
 )
 {
     int  *_sc = &(fakeProjectiveSpaces->_stackcounter);
-    int  n    = fakeProjectiveSpaces->n;
-
-    memcpy(fakeProjectiveSpaces->stack[*_sc], v, sizeof(FkpsType_t) * n);
+    fakeProjectiveSpaces->stack[*_sc] = FkpsPartitionCopy(fakeProjectiveSpaces->partition);
 
     if (++(*_sc) < BATCHSIZE && !forceFlush)
         return;
@@ -159,7 +162,7 @@ void FakeProjectiveSpacesFlush(
 
     for (int i = 0; i < *_sc; ++i)
         for (int j = 0; j < n; ++j)
-            fprintf(f, j==(n-1) ?"%d\n":"%d,", (int) projectiveSpaces->stack[i][j]);
+            fprintf(f, j==(n-1) ?"%d\n":"%d,", (int) projectiveSpaces->stack[i]->triplets[j].val);
 
     (*_bc)++;
     (*_sc) = 0;
@@ -177,7 +180,7 @@ FkpsType_t FakeProjectiveSpacesDeterminantQ(
 }
 
 
-void FakeProjectiveSpacesPartition(
+void FakeProjectiveSpacesSolvePartial(
 
     FakeProjectiveSpaces_t *projectiveSpaces,
     FkpsType_t toPart
@@ -193,7 +196,10 @@ void FakeProjectiveSpacesPartition(
     
     // TODO: N Partition.
     while(1)
+    {
+        FkpsPartitionIncrement(projectiveSpaces->partition);
         FakeProjectiveSpacesDeterminantQ(projectiveSpaces);
+    }
 
     /* 
     
