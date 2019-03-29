@@ -8,7 +8,8 @@
 
 void __log_err_malloc(void);
 void __log_err_fopen(const char *fname);
-void __log_dbg_flush(int batch);
+void __log_dbg_flush(int batch, const char *fname);
+void __log_dbg_unloading(const char *fname);
 
 
 LibfkpsDeterminantQ_t * LibfkpsDeterminantQInitLoad(
@@ -20,6 +21,12 @@ LibfkpsDeterminantQ_t * LibfkpsDeterminantQInitLoad(
 {
 
     LibfkpsDeterminantQ_t *lib = (LibfkpsDeterminantQ_t *) malloc(sizeof(LibfkpsDeterminantQ_t));
+
+    int fnameLen = strlen(fname);
+    if (fnameLen > 512) fnameLen = 512;
+
+    lib->filename = (char *) malloc(fnameLen * sizeof(char));
+    strncpy(lib->filename, fname, fnameLen);
 
     lib->file = fopen(fname, "w");
     if (!lib->file) { __log_err_fopen(fname); return NULL; }
@@ -59,11 +66,14 @@ void LibfkpsDeterminantQDeInitUnload(
 
 )
 {
+    __log_dbg_unloading(lib->filename);
+
     for (int i=0; i<FKPS_STACKSIZE; i++)
         free(lib->_partitions[i]);
 
     dlclose(lib->handle);
     fclose(lib->file);
+    free(lib->filename);
     free(lib);
 }
 
@@ -73,7 +83,7 @@ void LibfkpsDeterminantQDump(
 
 )
 {
-    __log_dbg_flush(lib->_batchcounter);
+    __log_dbg_flush(lib->_batchcounter, lib->filename);
 
     FILE *f   = lib->file;
     int  n    = lib->libinfo_N;
@@ -165,7 +175,12 @@ void __log_err_fopen(const char *fname)
     printf("ERR: Could not open: %s.\n", fname);
 }
 
-void __log_dbg_flush(int batch)
+void __log_dbg_flush(int batch, const char *fname)
 {
-    printf("DBG: Flushing batch: %d.\n", batch);
+    printf("DBG: Flushing batch %d to: %s\n", batch, fname);
+}
+
+void __log_dbg_unloading(const char *fname)
+{
+    printf("DBG: Unloading: %s.\n", fname);
 }

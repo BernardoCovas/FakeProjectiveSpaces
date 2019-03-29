@@ -14,6 +14,7 @@ typedef struct
 
     FILE *file;
     void *handle;
+    char *filename;
     
     int *_partitions[FKPS_STACKSIZE];
     int _stackcounter;
