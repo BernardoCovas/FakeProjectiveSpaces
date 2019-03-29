@@ -1,5 +1,5 @@
 def newCFile(N, K, func):
-    return f"""
+    return f"""\
 int libinfo_N = {N};
 int libinfo_K = {K};
 
