@@ -22,10 +22,10 @@ LibfkpsDeterminantQ_t * LibfkpsDeterminantQInitLoad(
     LibfkpsDeterminantQ_t *lib = (LibfkpsDeterminantQ_t *) malloc(sizeof(LibfkpsDeterminantQ_t));
 
     lib->file = fopen(fname, "w");
-    if (!lib->file) { return NULL; }
+    if (!lib->file) { __log_err_fopen(fname); return NULL; }
 
     lib->handle = dlopen(libfname, RTLD_NOW);
-    if (!lib->handle) return NULL;
+    if (!lib->handle) { __log_err_fopen(libfname); return NULL; };
 
     lib->libinfo_N      = *(int *) dlsym(lib->handle, "libinfo_N");
     lib->libinfo_K      = *(int *) dlsym(lib->handle, "libinfo_K");
@@ -144,8 +144,6 @@ void LibfkpsDeterminantQCompute(
 
     if (lib->determinantQ(x) == 0)
     {
-        int v[13];
-        memcpy(v, x, lib->libinfo_N * sizeof(int));
         memcpy(lib->_partitions[*sc], x, lib->libinfo_N * sizeof(int));
         (*sc)++;
 
