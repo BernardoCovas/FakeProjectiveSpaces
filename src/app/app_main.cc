@@ -5,14 +5,8 @@
 #include "LibfkpsDeterminantQ.h"
 #include "libfkpsconfig.h"
 
-std::string pathGenerator(const char *logdir, const char *libfname)
-{
-  std::filesystem::path _logdir(logdir);
-  std::filesystem::path _libfname(libfname);
+std::string pathGenerator(const char *logdir, const char *libfname);
 
-  _libfname = _libfname.replace_extension("csv").filename();
-  return (_logdir / _libfname).string();
-}
 
 int main(int argc, char const *argv[])
 {
@@ -56,4 +50,14 @@ int main(int argc, char const *argv[])
   }
   
   return 0;
+}
+
+
+std::string pathGenerator(const char *logdir, const char *libfname)
+{
+  std::filesystem::path _logdir(logdir);
+  std::filesystem::path _libfname(libfname);
+
+  _libfname = _libfname.replace_extension("csv").filename();
+  return (_logdir / _libfname).string();
 }
