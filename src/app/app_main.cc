@@ -1,57 +1,59 @@
-#include <stdlib.h>
 #include <stdio.h>
 #include <thread>
-#include <vector>
-#include <string>
 #include <filesystem>
 
-#include "fkps.h"
+#include "LibfkpsDeterminantQ.h"
+#include "libfkpsconfig.h"
 
-#define PARALELL_DET 8
-
-std::string AddInToFname(std::string path_s, int n)
+std::string pathGenerator(const char *logdir, const char *libfname)
 {
-    auto path = std::filesystem::path(path_s);
-    auto dir = path.parent_path();
-    auto fname = path.stem();
+  std::filesystem::path _logdir(logdir);
+  std::filesystem::path _libfname(libfname);
 
-    std::string s_fname = fname.string() + "_" + std::to_string(n) + path.extension().string();
-    fname = dir / std::filesystem::path(s_fname);
-    
-    return fname.string();
+  _libfname = _libfname.replace_extension("csv").filename();
+  return (_logdir / _libfname).string();
 }
 
-int main(int argc, char* args[]) {
+int main(int argc, char const *argv[])
+{
 
-    if (argc != 4) {
-        printf("Wrong number of arguments\n");
-        return -1;
-    }
+  if (argc < 3)
+  {
+    printf("Args: '/path/to/logdir' '/path/to/compiled/determinant_01.so' ('02.so', '03.so', ...).\n");
+    return 1;
+  }
 
-    int toPart       = atoi(args[1]);
-    int n            = atoi(args[2]);
-    std::string path = std::string(args[3]);
+  const char *logdir = argv[1];
+  int nLibs = argc - 2;
 
-    printf("Partitioning %d into %d, %d at a time.\n", toPart, n, PARALELL_DET);
+  printf("Using directory: %s\n", logdir);
 
-    std::thread thread_v[PARALELL_DET];
-    FakeProjectiveSpaces_t *fkps_v[PARALELL_DET];
+  LibfkpsDeterminantQ_t **libs = (LibfkpsDeterminantQ_t **) malloc(sizeof(LibfkpsDeterminantQ_t *) * nLibs);
+  std::thread ts[nLibs];
 
-    for (int i=0; i<PARALELL_DET; i++)
+  for (int i=0; i<nLibs; i++)
+  {
+    int argv_i = i+2;
+    const char *libfname = argv[argv_i];
+    std::string solFile = pathGenerator(logdir, libfname);
+
+    printf("Using library: %s\n", libfname);
+    printf("Using file: %s\n", solFile.c_str());
+
+    libs[i] = LibfkpsDeterminantQInitLoad(solFile.c_str(), libfname);
+    if (libs[i] == NULL)
     {
-        fkps_v[i] = FakeProjectiveSpacesInit(n, AddInToFname(path, i).c_str());
-        if (fkps_v[i] == NULL) { printf("Could not initialize.\n"); return -2; }
-        
-        FakeProjectiveSpacesMatLoadRandom(fkps_v[i]);
-
-        thread_v[i] = std::thread(&FakeProjectiveSpacesSolvePartial, fkps_v[i], (FkpsType_t) toPart);
+      printf("Could not load: %s", argv[i]);
+      return -1;
     }
 
-    for (int i=0; i<PARALELL_DET; i++)
-    {
-        thread_v[i].join();
-        FakeProjectiveSpacesDeInit(fkps_v[i]);
-    }
+    ts[i] = std::thread(LibfkpsDeterminantQComputeAll, libs[i]);
+  }
 
-    return 0;   
+  for (int i=0; i<nLibs; i++)
+  {
+    ts[i].join();
+  }
+  
+  return 0;
 }
