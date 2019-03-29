@@ -21,7 +21,7 @@ $ find ./determinants/*.so | xargs ./bin/fkps_app ./folder/
  ```
 
 The above command first compiles all the determinantQ functions  
-in a folder with 2 levels of optimization (To make it as efficienas possible) and then starts  
+in a folder with 2 levels of optimization (To make it as efficient possible) and then starts  
 the program with all of the compiled files as arguments.  
 Each compiled file argument generates a thread.  
 As results are obtained, they will be flushed to ./folder/.  
