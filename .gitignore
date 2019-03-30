@@ -7,3 +7,7 @@ CMakeSettings.json
 build
 bin
 data
+
+# Data files
+det
+solved
