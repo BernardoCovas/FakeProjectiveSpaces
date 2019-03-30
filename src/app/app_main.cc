@@ -63,8 +63,8 @@ int commandCompile(int argc, const char *argv[])
   {
     const char *fname = argv[i];
 
-    char *command;
-    if (!asprintf(&command, _compileCommand, fname, (std::string(fname) + ".so").c_str()))
+    char *command = new char[512];
+    if (!snprintf(command, 511, _compileCommand, fname, (std::string(fname) + ".so").c_str()))
     {
       printf("Bad command: %s. Should have two 's' placeholders.\n", command);
       continue;
@@ -116,7 +116,7 @@ int commandCompute(int argc, const char *argv[])
   printf("Found %d matching files.\n", nLibs);
 
   LibfkpsDeterminantQ_t **libs = (LibfkpsDeterminantQ_t **) malloc(sizeof(LibfkpsDeterminantQ_t *) * nLibs);
-  std::thread ts[nLibs];
+  std::thread *ts = new std::thread[nLibs];
 
   argv += 3;
   for (int i=0; i<nLibs; i++)
@@ -145,5 +145,6 @@ int commandCompute(int argc, const char *argv[])
     ts[i].join();
   }
 
+  delete(ts);
   return 0;
 }
