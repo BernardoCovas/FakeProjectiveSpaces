@@ -10,6 +10,11 @@ file( GLOB __C_HDR  ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h )
 
 add_library( libfkps ${__CC_SRC} )
 
+if (WIN32)
+  find_package(dlfcn-win32 REQUIRED)
+  target_link_libraries(libfkps PRIVATE dlfcn-win32::dl)
+endif () 
+
 target_include_directories( libfkps PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/include )
 target_include_directories( libfkps PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src )
 
