@@ -23,10 +23,14 @@ LibfkpsDeterminantQ_t * LibfkpsDeterminantQInitLoad(
     LibfkpsDeterminantQ_t *lib = (LibfkpsDeterminantQ_t *) malloc(sizeof(LibfkpsDeterminantQ_t));
 
     int fnameLen = strlen(fname);
+    int libfnameLen = strlen(libfname);
     if (fnameLen > 512) fnameLen = 512;
+    if (libfnameLen > 512) libfnameLen = 512;
 
-    lib->filename = (char *) malloc(fnameLen * sizeof(char));
+    lib->filename = (char *) malloc(fnameLen    * sizeof(char));
+    lib->libname  = (char *) malloc(libfnameLen * sizeof(char));
     strncpy(lib->filename, fname, fnameLen);
+    strncpy(lib->libname , libfname, libfnameLen);
 
     lib->file = fopen(fname, "w");
     if (!lib->file) { __log_err_fopen(fname); return NULL; }
