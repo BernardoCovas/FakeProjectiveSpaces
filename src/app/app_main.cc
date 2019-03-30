@@ -173,8 +173,8 @@ int commandGenerate(int argc, const char *argv[])
   while (std::getline(infile, line))
   {
     static int currfile = 0;
-    char cfname[5];
-    sprintf(cfname, "%02d.c", ++currfile);
+    char cfname[12];
+    sprintf(cfname, "%03d.c", ++currfile%999);
   
     std::filesystem::path cfpath(cfname);
     cfpath = dirpath / cfpath;
