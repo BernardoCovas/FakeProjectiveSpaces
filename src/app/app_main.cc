@@ -167,7 +167,7 @@ int commandGenerate(int argc, const char *argv[])
   std::filesystem::path dirpath(dirname);  
   std::ifstream infile(fname);
 
-  if (!infile.is_open()) { printf("Could not open: %s", fname); return -1; }
+  if (!infile.is_open()) { printf("Could not open: %s", fname.c_str()); return -1; }
 
   std::string line;
   while (std::getline(infile, line))
@@ -180,7 +180,7 @@ int commandGenerate(int argc, const char *argv[])
     cfpath = dirpath / cfpath;
   
     FILE  *file = fopen(cfpath.string().c_str(), "w");
-    if (!file) { printf("Could not open: %s", fname); return -1; }
+    if (!file) { printf("Could not open: %s", fname.c_str()); return -1; }
 
     fprintf(file, CFILE_FORMAT, 13, 48, line.c_str());
     fclose(file);
