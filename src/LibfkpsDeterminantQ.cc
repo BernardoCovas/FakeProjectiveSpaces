@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <filesystem>
+#include <atomic>
 #include <dlfcn.h>
 
 
@@ -83,7 +85,8 @@ void LibfkpsDeterminantQDump(
 
 )
 {
-    __log_dbg_flush(lib->_batchcounter, lib->filename);
+	std::filesystem::path fpath(lib->filename);
+    __log_dbg_flush(lib->_batchcounter, fpath.filename().string().c_str());
 
     FILE *f   = lib->file;
     int  n    = lib->libinfo_N;
@@ -177,7 +180,8 @@ void __log_err_fopen(const char *fname)
 
 void __log_dbg_flush(int batch, const char *fname)
 {
-    printf("DBG: Flushing batch %d to: %s\n", batch, fname);
+	static std::atomic_int currLog = 0;
+    printf("\rDBG: [ %d ][ Flushing batch %d to: %s ]", currLog++, batch, fname);
 }
 
 void __log_dbg_unloading(const char *fname)
