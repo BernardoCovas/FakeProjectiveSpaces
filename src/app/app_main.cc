@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <thread>
+#include <atomic>
 #include <filesystem>
 
 #include "LibfkpsDeterminantQ.h"
@@ -50,7 +51,7 @@ int commandCompile(int argc, const char *argv[])
 
   if (argc < 4)
   {
-    printf("Args: 'compileCommandWithFormat' '/path/to/cfiles_dir/01.c', ...\n");
+    printf("Args: 'compileCommandWithFormat' '/path/to/cfiles_dir/01.c', ['/path/to/cfiles_dir/02.c' ... ]\n");
     return 1;
   }
 
@@ -75,11 +76,35 @@ int commandCompile(int argc, const char *argv[])
   return 0;
 }
 
+void _commandComputeConsume(LibfkpsDeterminantQ_t **lib_v, int lib_c)
+{
+  static std::atomic_int threadID = 0;
+
+  while(true)
+  {
+    int t_id = threadID++;
+    if (t_id >= lib_c)
+    {
+      printf("Thread exited.\n");
+      return;
+    }
+    LibfkpsDeterminantQ_t *lib = lib_v[t_id];
+    printf("Starting %s.\n", lib->libname);
+
+    LibfkpsDeterminantQComputeAll(lib);
+    LibfkpsDeterminantQDeInitUnload(lib);
+
+    printf("Finished %s.\n", lib->libname);
+  }
+
+}
+
 int commandCompute(int argc, const char *argv[])
 {
+
   if (argc < 4)
   {
-    printf("Args: '/path/to/logdir' '/path/to/dir/\\*.so'.\n");
+    printf("Args: '/path/to/logdir' '/path/to/dir/compiled.c.so' ['/path/to/dir/compiled2.c.so' ... ]\n");
     return 1;
   }
 
@@ -99,8 +124,7 @@ int commandCompute(int argc, const char *argv[])
     const char *libfname = argv[i];
     std::string solFile = pathGenerator(logdir, libfname);
 
-    printf("Using library: %s\n", libfname);
-    printf("Using file: %s\n", solFile.c_str());
+    printf("Using library: %s, writing to %s\n", libfname, solFile.c_str());
 
     libs[i] = LibfkpsDeterminantQInitLoad(solFile.c_str(), libfname);
     if (libs[i] == NULL)
@@ -108,15 +132,18 @@ int commandCompute(int argc, const char *argv[])
       printf("Could not load: %s\n", libfname);
       return -1;
     }
-  
-    ts[i] = std::thread(LibfkpsDeterminantQComputeAll, libs[i]);
+
+  }
+
+  for (int i=0; i<FKPS_PARALELL; i++)
+  {
+    ts[i] = std::thread(_commandComputeConsume, libs, nLibs);
   }
 
   for (int i=0; i<nLibs; i++)
   {
     ts[i].join();
-    LibfkpsDeterminantQDeInitUnload(libs[i]);
   }
-  
+
   return 0;
 }
