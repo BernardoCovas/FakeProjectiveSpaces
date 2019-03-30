@@ -105,10 +105,10 @@ int commandCompute(int argc, const char *argv[])
   std::filesystem::path _logdir(argv[2]);
 
   printf("Using directory: %s\n", _logdir.string().c_str());
-  printf("Found %d matching files.\n", nLibs);
+  printf("Using %d library files.\n", nLibs);
 
   LibfkpsDeterminantQ_t **libs = (LibfkpsDeterminantQ_t **) malloc(sizeof(LibfkpsDeterminantQ_t *) * nLibs);
-  std::thread *ts = new std::thread[nLibs];
+  std::thread *ts = new std::thread[FKPS_PARALELL];
 
   argv += 3;
   for (int i=0; i<nLibs; i++)
@@ -180,7 +180,7 @@ int commandGenerate(int argc, const char *argv[])
     cfpath = dirpath / cfpath;
   
     FILE  *file = fopen(cfpath.string().c_str(), "w");
-    if (!file) { printf("Could not open: %s", fname.c_str()); return -1; }
+    if (!file) { printf("Could not open: %s", cfpath.string().c_str()); return -1; }
 
     fprintf(file, CFILE_FORMAT, 13, 48, line.c_str());
     fclose(file);
