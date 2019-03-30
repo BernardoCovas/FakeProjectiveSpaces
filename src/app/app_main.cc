@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <fstream>
 #include <thread>
 #include <atomic>
 #include <filesystem>
@@ -7,14 +8,16 @@
 #include "LibfkpsDeterminantQ.h"
 #include "libfkpsconfig.h"
 
+#define COMMAND_COMPUTE  "compute"
+#define COMMAND_COMPILE  "compile"
+#define COMMAND_GENERATE "generate"
 
-#define COMMAND_COMPUTE "compute"
-#define COMMAND_COMPILE "compile"
 
 std::string pathGenerator(const char *logdir, const char *libfname);
 
-int commandCompile(int argc, const char *argv[]);
-int commandCompute(int argc, const char *argv[]);
+int commandGenerate(int argc, const char *argv[]);
+int commandCompile (int argc, const char *argv[]);
+int commandCompute (int argc, const char *argv[]);
 
 
 int main(int argc, char const *argv[])
@@ -22,17 +25,18 @@ int main(int argc, char const *argv[])
 
   if (argc < 2)
   {
-    printf("Args: 'command' [Args ...]. Commands: compute, compile\n");
+    printf("Args: 'command' [Args ...]. Commands: generate, compile, compute\n");
     return 1;
   }
 
   const char *command = argv[1];
 
-  if(memcmp(command, COMMAND_COMPUTE, strlen(COMMAND_COMPUTE)) == 0)
-    return commandCompute(argc, argv);
-
-  if(memcmp(command, COMMAND_COMPILE, strlen(COMMAND_COMPILE)) == 0)
+  if(strcmp(command, COMMAND_GENERATE) == 0)
+    return commandGenerate(argc, argv);
+  if(strcmp(command, COMMAND_COMPILE) == 0)
     return commandCompile(argc, argv);
+  if(strcmp(command, COMMAND_COMPUTE) == 0)
+    return commandCompute(argc, argv);
 
 }
 
@@ -146,5 +150,50 @@ int commandCompute(int argc, const char *argv[])
   }
 
   delete(ts);
+  return 0;
+}
+
+int commandGenerate(int argc, const char *argv[])
+{
+  const char *CFILE_FORMAT = 
+    "int libinfo_N = %d;\n"
+    "int libinfo_K = %d;\n\n"
+    "int determinantQ(int *x)\n"
+    "{\n"
+    "    return %s;\n"
+    "}\n";
+
+  if (argc != 4)
+  {
+    printf("Args: '/path/to/gendir' '/path/to/parsedFile.txt'\n");
+    return 1;
+  }
+
+  std::string dirname(argv[2]);
+  std::string fname(argv[3]);
+
+  std::filesystem::path dirpath(dirname);  
+  std::ifstream infile(fname);
+
+  if (!infile.is_open()) { printf("Could not open: %s", fname); return -1; }
+
+  std::string line;
+  while (std::getline(infile, line))
+  {
+    static int currfile = 0;
+    char cfname[5];
+    sprintf(cfname, "%02d.c", ++currfile);
+  
+    std::filesystem::path cfpath(cfname);
+    cfpath = dirpath / cfpath;
+  
+    FILE  *file = fopen(cfpath.string().c_str(), "w");
+    if (!file) { printf("Could not open: %s", fname); return -1; }
+
+    fprintf(file, CFILE_FORMAT, 13, 48, line.c_str());
+    fclose(file);
+    printf("Wrote: %s\n", cfpath.string().c_str());
+  }  
+
   return 0;
 }
