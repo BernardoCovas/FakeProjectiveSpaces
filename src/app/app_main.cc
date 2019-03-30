@@ -13,8 +13,6 @@
 #define COMMAND_GENERATE "generate"
 
 
-std::string pathGenerator(const char *logdir, const char *libfname);
-
 int commandGenerate(int argc, const char *argv[]);
 int commandCompile (int argc, const char *argv[]);
 int commandCompute (int argc, const char *argv[]);
@@ -38,16 +36,6 @@ int main(int argc, char const *argv[])
   if(strcmp(command, COMMAND_COMPUTE) == 0)
     return commandCompute(argc, argv);
 
-}
-
-
-std::string pathGenerator(const char *logdir, const char *libfname)
-{
-  std::filesystem::path _logdir(logdir);
-  std::filesystem::path _libfname(libfname);
-
-  _libfname = _libfname.replace_extension("csv").filename();
-  return (_logdir / _libfname).string();
 }
 
 int commandCompile(int argc, const char *argv[])
@@ -112,11 +100,11 @@ int commandCompute(int argc, const char *argv[])
     return 1;
   }
 
-  const char *logdir = argv[2];
-  const char *compiledObjDir = argv[3];
   int nLibs = argc - 3;
 
-  printf("Using directory: %s\n", logdir);
+  std::filesystem::path _logdir(argv[2]);
+
+  printf("Using directory: %s\n", _logdir.string().c_str());
   printf("Found %d matching files.\n", nLibs);
 
   LibfkpsDeterminantQ_t **libs = (LibfkpsDeterminantQ_t **) malloc(sizeof(LibfkpsDeterminantQ_t *) * nLibs);
@@ -125,15 +113,19 @@ int commandCompute(int argc, const char *argv[])
   argv += 3;
   for (int i=0; i<nLibs; i++)
   {
-    const char *libfname = argv[i];
-    std::string solFile = pathGenerator(logdir, libfname);
 
-    printf("Using library: %s, writing to %s\n", libfname, solFile.c_str());
+    std::filesystem::path _libfname(argv[i]);
+    std::filesystem::path _solfile(_libfname);
+    _solfile = _solfile.replace_extension("csv").filename();
 
-    libs[i] = LibfkpsDeterminantQInitLoad(solFile.c_str(), libfname);
+    std::string solFile = (_logdir / _solfile).string();
+
+    printf("Using library: %s, writing to %s\n", _libfname.string().c_str(), solFile.c_str());
+
+    libs[i] = LibfkpsDeterminantQInitLoad(solFile.c_str(), _libfname.string().c_str());
     if (libs[i] == NULL)
     {
-      printf("Could not load: %s\n", libfname);
+      printf("Could not load: %s\n", _libfname.string().c_str());
       return -1;
     }
 
