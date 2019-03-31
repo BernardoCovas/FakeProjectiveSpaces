@@ -6,7 +6,9 @@ if (UNIX)
     target_link_libraries(fkps_app stdc++fs )
     target_link_libraries(fkps_app pthread  )
     target_link_libraries(fkps_app dl       )
-endif (UNIX)
+else()
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} setargv.obj")
+endif(UNIX)
 
 install(
     TARGETS fkps_app
