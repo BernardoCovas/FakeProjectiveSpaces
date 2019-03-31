@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <string.h>
-#include <glob.h>
 #include <fstream>
 #include <thread>
 #include <atomic>
@@ -194,6 +193,7 @@ int commandGenerate(int argc, const char *argv[])
   return 0;
 }
 
+
 int commandAll(int argc, const char *argv[])
 {
   if (argc != 4)
@@ -201,7 +201,6 @@ int commandAll(int argc, const char *argv[])
     printf("Args: '/path/to/expressionCFile.txt' 'compile_command'\n");
     return 1;
   }
-
   std::filesystem::path     detPath       ("det");
   std::filesystem::path     solvedPath    ("solved");
   std::filesystem::path     cFilePath     (argv[2]);
@@ -210,28 +209,38 @@ int commandAll(int argc, const char *argv[])
   std::filesystem::create_directories(detPath);
   std::filesystem::create_directories(solvedPath);
 
+  std::string systemcall1;
+  systemcall1 += argv[0];
+  systemcall1 += " ";
+  systemcall1 += COMMAND_GENERATE;
+  systemcall1 += " ";
+  systemcall1 += (detPath.string());
+  systemcall1 += " ";
+  systemcall1 += (cFilePath.string());
 
-  std::vector<const char *> _argv1 = {argv[0], argv[1], detPath.c_str(), cFilePath.c_str()};
-  if(commandGenerate(_argv1.size(), _argv1.data())) return 1;
+  if (system(systemcall1.c_str()) != 0) return 1;
 
+  std::string systemcall2;
+  systemcall2 += argv[0];
+  systemcall2 += " ";
+  systemcall2 += COMMAND_COMPILE;
+  systemcall2 += " ";
+  systemcall2 += '"' + compileCommand + '"';
+  systemcall2 += " ";
+  systemcall2 += (detPath / "*.c").string();
 
-  glob_t globRes;
-  glob((detPath / "*.c").c_str(), 0, NULL, &globRes);
+  if (system(systemcall2.c_str()) != 0) return 1;
 
-  std::vector<const char *> _argv2 = {argv[0], argv[1], compileCommand.c_str()};
-  for (int i=0; i<globRes.gl_pathc; i++)
-    _argv2.push_back(globRes.gl_pathv[i]);
-  if(commandCompile(_argv2.size(), _argv2.data())) return 2;
-  globfree(&globRes);
+  std::string systemcall3;
+  systemcall3 += argv[0];
+  systemcall3 += " ";
+  systemcall3 += COMMAND_COMPUTE;
+  systemcall3 += " ";
+  systemcall3 += solvedPath.string();
+  systemcall3 += " ";
+  systemcall3 += (detPath / "*.so").string();
 
-
-  glob_t globRes2;
-  glob((detPath / "*.so").c_str(), 0, NULL, &globRes2);
-
-  std::vector<const char *> _argv3 = {argv[0], argv[1], solvedPath.c_str()};
-  for(int i=0; i<globRes2.gl_pathc; i++)
-    _argv3.push_back(globRes2.gl_pathv[i]);
-  if(commandCompute(_argv3.size(), _argv3.data())) return 3;
+  if (system(systemcall3.c_str()) != 0) return 1;
 
   return 0;
 }
