@@ -21,7 +21,7 @@ int FkpsCommandGenerate(
 {
 
   std::ifstream infile(cParsedFile);
-  if (!infile.is_open()) { printf("Could not open: %s", cParsedFile.string()); return -1; }
+  if (!infile.is_open()) { printf("Could not open: %s", cParsedFile.string().c_str()); return -1; }
 
   std::filesystem::create_directories(genPath);
 
