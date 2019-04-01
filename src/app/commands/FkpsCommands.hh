@@ -1,7 +1,9 @@
 #ifndef _FKPSCOMMANDS_H
 #define _FKPSCOMMANDS_H
 
+#include <vector>
 #include <filesystem>
+
 #include "LibFkpsDeterminantQ.h"
 
 typedef std::filesystem::path FSPATH;
