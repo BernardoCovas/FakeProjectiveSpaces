@@ -86,7 +86,7 @@ int FkpsCommandCompute(
     
     for (int i=0; i<FKPS_PARALELL; i++)
     {
-        std::thread t(&FkpsCommandExecute, &loadedLibV);
+        ts[i] = std::thread(&FkpsCommandExecute, &loadedLibV);
     }
 
     for (int i=0; i<FKPS_PARALELL; i++)
