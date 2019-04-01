@@ -18,4 +18,24 @@ endif ()
 target_include_directories( libfkps PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/include )
 target_include_directories( libfkps PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src )
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/app)
+
+# MAIN_APP
+
+file(GLOB __CC_APP_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/src/app/commands/*.cc")
+add_executable(fkps_app src/app/app_main.cc ${__CC_APP_SRCS})
+
+target_link_libraries(fkps_app libfkps)
+target_include_directories( fkps_app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/app )
+
+if (UNIX)
+    target_link_libraries(fkps_app stdc++fs )
+    target_link_libraries(fkps_app pthread  )
+    target_link_libraries(fkps_app dl       )
+else()
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} setargv.obj")
+endif(UNIX)
+
+install(
+    TARGETS fkps_app
+    RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+)
