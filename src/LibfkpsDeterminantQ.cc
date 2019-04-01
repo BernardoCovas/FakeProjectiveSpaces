@@ -6,7 +6,7 @@
 #include <dlfcn.h>
 
 
-#include "LibfkpsDeterminantQ.h"
+#include "LibFkpsDeterminantQ.h"
 
 void __log_err_malloc(void);
 void __log_err_fopen(const char *fname);
