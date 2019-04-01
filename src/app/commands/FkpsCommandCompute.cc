@@ -60,7 +60,7 @@ int FkpsCommandCompute(
             logFile.string().c_str()
             );
 
-        FKPSLIB *lib = LibfkpsDeterminantQInitLoad(
+         FKPSLIB *lib = LibfkpsDeterminantQInitLoad(
             logFile.string().c_str(),
             libPath.string().c_str()
             );
