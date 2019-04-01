@@ -5,8 +5,9 @@
 #include <atomic>
 #include <filesystem>
 
-#include "LibfkpsDeterminantQ.h"
+#include "LibFkpsDeterminantQ.h"
 #include "libfkpsconfig.h"
+#include "commands/FkpsCommands.hh"
 
 #define COMMAND_COMPUTE  "compute"
 #define COMMAND_COMPILE  "compile"
@@ -31,6 +32,9 @@ int main(int argc, char const *argv[])
 
   const char *command = argv[1];
 
+  argv += 2;
+  argc -= 2;
+
   if(strcmp(command, COMMAND_GENERATE) == 0)
     return commandGenerate(argc, argv);
   if(strcmp(command, COMMAND_COMPILE) == 0)
@@ -43,204 +47,115 @@ int main(int argc, char const *argv[])
 
 int commandCompile(int argc, const char *argv[])
 {
-
-  if (argc < 4)
+  if (argc < 2)
   {
-    printf("Args: 'compileCommandWithFormat' '/path/to/cfiles_dir/01.c', ['/path/to/cfiles_dir/02.c' ... ]\n");
+    printf("Args: 'compileCommandFormat' '/path/to/c/file.c' ['/path/to/c/file2.c' ... ]\n");
     return 1;
   }
 
-  const char *_compileCommand = argv[2];
-  int nCFiles = argc - 3;
+  FSPATHV inFilepathV;
+  FSPATHV outLibpathV;
+  std::string compileCommand(argv[0]);
 
-  argv += 3;
-  for (int i=0; i<nCFiles; i++)
-  {
-    const char *fname = argv[i];
+  for (int i=1; i<argc; i++)
+    inFilepathV.push_back(FSPATH(argv[i]));
 
-    char *command = new char[512];
-    if (!snprintf(command, 511, _compileCommand, fname, (std::string(fname) + ".so").c_str()))
-    {
-      printf("Bad command: %s. Should have two 's' placeholders.\n", command);
-      continue;
-    }
-
-    printf("Result: %d for '%s'\n", system(command), command);
-  }
-
-  return 0;
-}
-
-void _commandComputeConsume(LibfkpsDeterminantQ_t **lib_v, int lib_c)
-{
-  static std::atomic_int threadID = 0;
-
-  while(true)
-  {
-    int t_id = threadID++;
-    if (t_id >= lib_c)
-    {
-      printf("Thread exited.\n");
-      return;
-    }
-    LibfkpsDeterminantQ_t *lib = lib_v[t_id];
-    printf("Starting %s.\n", lib->libname);
-
-    LibfkpsDeterminantQComputeAll(lib);
-    LibfkpsDeterminantQDeInitUnload(lib);
-
-    printf("Finished %s.\n", lib->libname);
-  }
+  return FkpsCommandCompile(
+    inFilepathV,
+    outLibpathV,
+    compileCommand
+    );
 
 }
 
 int commandCompute(int argc, const char *argv[])
 {
 
-  if (argc < 4)
+  if (argc < 2)
   {
     printf("Args: '/path/to/logdir' '/path/to/dir/compiled.c.so' ['/path/to/dir/compiled2.c.so' ... ]\n");
     return 1;
   }
 
-  int nLibs = argc - 3;
+  FSPATH logDir(argv[0]);
+  FSPATHV libPathV;
+  for (int i=1; i<argc; i++)
+    libPathV.push_back(FSPATH(argv[i]));
+  
+  FkpsCommandCompute(
+    libPathV,
+    logDir
+    );
 
-  std::filesystem::path _logdir(argv[2]);
-
-  printf("Using directory: %s\n", _logdir.string().c_str());
-  printf("Using %d library files.\n", nLibs);
-
-  LibfkpsDeterminantQ_t **libs = (LibfkpsDeterminantQ_t **) malloc(sizeof(LibfkpsDeterminantQ_t *) * nLibs);
-  std::thread *ts = new std::thread[FKPS_PARALELL];
-
-  argv += 3;
-  for (int i=0; i<nLibs; i++)
-  {
-
-    std::filesystem::path _libfname(argv[i]);
-    std::filesystem::path _solfile(_libfname);
-    _solfile = _solfile.replace_extension("csv").filename();
-
-    std::string solFile = (_logdir / _solfile).string();
-
-    printf("Using library: %s, writing to %s\n", _libfname.string().c_str(), solFile.c_str());
-
-    libs[i] = LibfkpsDeterminantQInitLoad(solFile.c_str(), _libfname.string().c_str());
-    if (libs[i] == NULL)
-    {
-      printf("Could not load: %s\n", _libfname.string().c_str());
-      return -1;
-    }
-
-  }
-
-  for (int i=0; i<FKPS_PARALELL; i++)
-  {
-    ts[i] = std::thread(_commandComputeConsume, libs, nLibs);
-  }
-
-  for (int i=0; i<nLibs; i++)
-  {
-    ts[i].join();
-  }
-
-  delete(ts);
   return 0;
 }
 
 int commandGenerate(int argc, const char *argv[])
 {
-  const char *CFILE_FORMAT = 
-    "int libinfo_N = %d;\n"
-    "int libinfo_K = %d;\n\n"
-    "int determinantQ(int *x)\n"
-    "{\n"
-    "    return %s;\n"
-    "}\n";
 
-  if (argc != 4)
+  if (argc != 2)
   {
-    printf("Args: '/path/to/gendir' '/path/to/parsedFile.txt'\n");
+    printf("Args: '/path/to/parsedFile.txt' '/path/to/gendir'\n");
     return 1;
   }
 
-  std::string dirname(argv[2]);
-  std::string fname(argv[3]);
+  FSPATH fname  (argv[0]);
+  FSPATH dirname(argv[1]);
+  FSPATHV _outDir;
 
-  std::filesystem::path dirpath(dirname);  
-  std::ifstream infile(fname);
+  return FkpsCommandGenerate(
+    dirname,
+    fname,
+    _outDir
+  );
 
-  if (!infile.is_open()) { printf("Could not open: %s", fname.c_str()); return -1; }
-
-  std::string line;
-  while (std::getline(infile, line))
-  {
-    static int currfile = 0;
-    char cfname[12];
-    sprintf(cfname, "%03d.c", ++currfile%999);
-  
-    std::filesystem::path cfpath(cfname);
-    cfpath = dirpath / cfpath;
-  
-    FILE  *file = fopen(cfpath.string().c_str(), "w");
-    if (!file) { printf("Could not open: %s", cfpath.string().c_str()); return -1; }
-
-    fprintf(file, CFILE_FORMAT, 13, 48, line.c_str());
-    fclose(file);
-    printf("Wrote: %s\n", cfpath.string().c_str());
-  }  
-
-  return 0;
 }
 
 
 int commandAll(int argc, const char *argv[])
 {
-  if (argc != 4)
+  if (argc != 2)
   {
     printf("Args: '/path/to/expressionCFile.txt' 'compile_command'\n");
     return 1;
   }
-  std::filesystem::path     detPath       ("det");
-  std::filesystem::path     solvedPath    ("solved");
-  std::filesystem::path     cFilePath     (argv[2]);
-  std::string               compileCommand(argv[3]);
+
+  FSPATH detPath    ("det");
+  FSPATH solvedPath ("solved");
+  FSPATH cFilePath  (argv[0]);
+  std::string       compileCommand(argv[1]);
 
   std::filesystem::create_directories(detPath);
   std::filesystem::create_directories(solvedPath);
 
-  std::string systemcall1;
-  systemcall1 += argv[0];
-  systemcall1 += " ";
-  systemcall1 += COMMAND_GENERATE;
-  systemcall1 += " ";
-  systemcall1 += (detPath.string());
-  systemcall1 += " ";
-  systemcall1 += (cFilePath.string());
+  FSPATHV cFilePathV;
+  FSPATHV libPathV;
+  int resCode;
 
-  if (system(systemcall1.c_str()) != 0) return 1;
+  resCode = FkpsCommandGenerate(
+    detPath,
+    cFilePath,
+    cFilePathV
+    );
 
-  std::string systemcall2;
-  systemcall2 += argv[0];
-  systemcall2 += " ";
-  systemcall2 += COMMAND_COMPILE;
-  systemcall2 += " ";
-  systemcall2 += '"' + compileCommand + '"';
-  systemcall2 += " ";
-  systemcall2 += (detPath / "*.c").string();
+  if(resCode != 0) return 1;
 
-  if (system(systemcall2.c_str()) != 0) return 1;
 
-  std::string systemcall3;
-  systemcall3 += argv[0];
-  systemcall3 += " ";
-  systemcall3 += COMMAND_COMPUTE;
-  systemcall3 += " ";
-  systemcall3 += solvedPath.string();
-  systemcall3 += " ";
-  systemcall3 += (detPath / "*.so").string();
+  resCode = FkpsCommandCompile(
+    cFilePathV,
+    libPathV,
+    compileCommand
+    );
 
-  if (system(systemcall3.c_str()) != 0) return 1;
+  if(resCode != 0) return 2;
+
+
+  resCode = FkpsCommandCompute(
+    libPathV,
+    solvedPath
+  );
+
+  if(resCode != 0) return 3;
 
   return 0;
 }

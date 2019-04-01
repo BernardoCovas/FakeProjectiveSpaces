@@ -20,7 +20,6 @@ typedef struct
     int *_partitions[FKPS_STACKSIZE];
     int _stackcounter;
     int _batchcounter;
-    /* data */
 } LibfkpsDeterminantQ_t;
 
 
