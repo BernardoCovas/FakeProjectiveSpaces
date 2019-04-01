@@ -34,11 +34,16 @@ int FkpsCommandGenerate(
     cFile << currfile++ << ".c";
     FSPATH cFilePath(cFile.str());
     cFilePath = genPath / cFile.str();
-  
+
+    int libN, libK;
+    char *expression = new char[line.size()];
+
+    std::sscanf(line.c_str(), "%d,%d,%[^\t\n]", &libN, &libK, expression);
+
     FILE *file = fopen(cFilePath.string().c_str(), "w");
     if (!file) { printf("Could not open: %s\n", cFilePath.string().c_str()); return -1; }
 
-    fprintf(file, CFILE_FORMAT, 13, 48, line.c_str());
+    fprintf(file, CFILE_FORMAT, libN, libK, expression);
     fclose(file);
 
     printf("Wrote: %s\n", cFilePath.string().c_str());
