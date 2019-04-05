@@ -5,45 +5,19 @@
 
 #include "FkpsCommands.hh"
 #include "LibFkpsDeterminantQ.h"
-
-void FkpsCommandExecute(
-    
-    FKPSLIBV *fkpsLibV
-
-)
-{
-  static std::atomic_int threadID = 0;
-
-  while(true)
-  {
-    int t_id = threadID++;
-    if (t_id >= (int) fkpsLibV->size())
-    {
-      printf("Thread exited.\n");
-      return;
-    }
-    FKPSLIB lib = fkpsLibV->operator[](t_id);
-    printf("Starting %s.\n", lib.libname);
-
-    LibfkpsDeterminantQComputeAll(&lib);
-    LibfkpsDeterminantQDeInitUnload(&lib);
-
-    printf("Finished %s.\n", lib.libname);
-  }
-
-}
+#include "LibFkpsUtils.hh"
 
 
 int FkpsCommandCompute(
 
     FSPATHV &libPathV,
     FSPATH   logDir
+
 )
 {    
     printf("Using directory: %s\n", logDir.string().c_str());
     printf("Using %d library files.\n", (int) libPathV.size());
 
-    std::thread *ts = new std::thread[FKPS_PARALELL];
     FKPSLIBV loadedLibV;
     
     for (int i=0; i < (int) libPathV.size(); i++)
@@ -60,7 +34,7 @@ int FkpsCommandCompute(
             logFile.string().c_str()
             );
 
-         FKPSLIB *lib = LibfkpsDeterminantQInitLoad(
+         FKPSLIB *lib = (LibfkpsDeterminantQ_t *) LibfkpsDeterminantQInitLoad(
             logFile.string().c_str(),
             libPath.string().c_str()
             );
@@ -77,21 +51,13 @@ int FkpsCommandCompute(
                     &loadedLibV[j]
                     );
             
-            delete[] ts;
             return -1;
         }
  
         loadedLibV.push_back(*lib);
     }
     
-    for (int i=0; i<FKPS_PARALELL; i++)
-    {
-        ts[i] = std::thread(&FkpsCommandExecute, &loadedLibV);
-    }
+    LibFkpsParallelCompute(&loadedLibV, FKPS_COMPUTE_PARALELL);
 
-    for (int i=0; i<FKPS_PARALELL; i++)
-        ts[i].join();
-
-    delete[] ts;
     return 0;
 }

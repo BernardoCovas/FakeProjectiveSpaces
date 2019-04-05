@@ -26,6 +26,7 @@ add_executable(fkps_app src/app/app_main.cc ${__CC_APP_SRCS})
 
 target_link_libraries(fkps_app libfkps)
 target_include_directories( fkps_app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/app )
+target_include_directories( fkps_app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/ )
 
 if (UNIX)
     target_link_libraries(fkps_app stdc++fs )

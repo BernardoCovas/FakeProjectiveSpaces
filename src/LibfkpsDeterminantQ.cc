@@ -1,12 +1,16 @@
+#include "LibFkpsDeterminantQ.h"
+#include "LibFkpsDeterminantQ.hh"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <filesystem>
-#include <atomic>
 #include <dlfcn.h>
 
+#include <filesystem>
+#include <atomic>
+#include <array>
+#include <mutex>
 
-#include "LibFkpsDeterminantQ.h"
 
 void __log_err_malloc(void);
 void __log_err_fopen(const char *fname);
@@ -14,7 +18,7 @@ void __log_dbg_flush(int batch, const char *fname);
 void __log_dbg_unloading(const char *fname);
 
 
-LibfkpsDeterminantQ_t * LibfkpsDeterminantQInitLoad(
+FKPS LibfkpsDeterminantQInitLoad(
 
     const char *fname,
     const char *libfname
@@ -23,6 +27,7 @@ LibfkpsDeterminantQ_t * LibfkpsDeterminantQInitLoad(
 {
 
     LibfkpsDeterminantQ_t *lib = (LibfkpsDeterminantQ_t *) malloc(sizeof(LibfkpsDeterminantQ_t));
+
 
     lib->filename = (char *) calloc(512, sizeof(char));
     lib->libname  = (char *) calloc(512, sizeof(char));
@@ -43,70 +48,75 @@ LibfkpsDeterminantQ_t * LibfkpsDeterminantQInitLoad(
 
     if (!(lib->libinfo_N) || !(lib->libinfo_K) || !(lib->determinantQ))
     { 
-        LibfkpsDeterminantQDeInitUnload(lib);
+        LibfkpsDeterminantQDeInitUnload((FKPS) lib);
         __log_err_malloc();
         return NULL;
     }
 
-    for (int i=0; i<FKPS_STACKSIZE; i++)
-    {
-        lib->_partitions[i] = (int *) malloc(lib->libinfo_N * sizeof(int));
-        if (! lib->_partitions[i]) {
-            LibfkpsDeterminantQDeInitUnload(lib);
-            __log_err_malloc();
-            return NULL;
-        }
+    lib->_partitions = (int *) malloc(lib->libinfo_N * sizeof(int) * FKPS_STACKSIZE);
+
+    if (!lib->_partitions) {
+        LibfkpsDeterminantQDeInitUnload((FKPS) lib);
+        __log_err_malloc();
+        return NULL;
     }
 
-    return lib;
+    lib->_mutex = new std::mutex;
+    return (FKPS) lib;
 }
 
 void LibfkpsDeterminantQDeInitUnload(
     
-    LibfkpsDeterminantQ_t *lib
+    FKPS lib
 
 )
 {
-    __log_dbg_unloading(lib->filename);
+    LibfkpsDeterminantQ_t *_lib = (LibfkpsDeterminantQ_t *) lib;
 
-    for (int i=0; i<FKPS_STACKSIZE; i++)
-        free(lib->_partitions[i]);
+    __log_dbg_unloading(_lib->filename);
 
-    dlclose(lib->handle);
-    fclose(lib->file);
-    free(lib->filename);
-    free(lib->libname);
-    free(lib);
+    delete _lib->_mutex;
+    free(_lib->_partitions);
+
+    dlclose(_lib->handle);
+    fclose(_lib->file);
+    free(_lib->filename);
+    free(_lib->libname);
+    free(_lib);
 }
 
 void LibfkpsDeterminantQDump(
     
-    LibfkpsDeterminantQ_t *lib
+    FKPS lib
 
 )
 {
-	std::filesystem::path fpath(lib->filename);
-    __log_dbg_flush(lib->_batchcounter, fpath.filename().string().c_str());
+    LibfkpsDeterminantQ_t *_lib = (LibfkpsDeterminantQ_t *) lib;
 
-    FILE *f   = lib->file;
-    int  n    = lib->libinfo_N;
-    int  *_sc = &(lib->_stackcounter);
+	std::filesystem::path fpath(_lib->filename);
+    __log_dbg_flush(_lib->_batchcounter, fpath.filename().string().c_str());
 
-    for (int i = 0; i < *_sc; ++i)
+    FILE *f   = _lib->file;
+    int  n    = _lib->libinfo_N;
+    int  sc   = _lib->_stackcounter;
+
+    for (int i = 0; i < sc; i++)
         for (int j = 0; j < n; ++j)
-            fprintf(f, j==(n-1) ?"%d\n":"%d,", (int) lib->_partitions[i][j]);
+            fprintf(f, j==(n-1) ?"%d\n":"%d,", (int) _lib->_partitions[j + (i * _lib->libinfo_N)]);
+    _lib->_batchcounter++;
 
-    lib->_batchcounter++;
 }
 
 void LibfkpsDeterminantQComputeAll(
     
-    LibfkpsDeterminantQ_t *lib
+    FKPS lib
 
 )
 {
-    int n = lib->libinfo_N;
-    int k = lib->libinfo_K;
+    LibfkpsDeterminantQ_t *_lib = (LibfkpsDeterminantQ_t *) lib;
+
+    int n = _lib->libinfo_N;
+    int k = _lib->libinfo_K;
 
     int *v = (int *) malloc(sizeof(int) * n);
 
@@ -140,7 +150,7 @@ void LibfkpsDeterminantQComputeAll(
 
     }
 
-    if(lib->_stackcounter > 0)
+    if(_lib->_stackcounter > 0)
         LibfkpsDeterminantQDump(lib);
 
     free(v);
@@ -148,23 +158,28 @@ void LibfkpsDeterminantQComputeAll(
 
 void LibfkpsDeterminantQCompute(
     
-    LibfkpsDeterminantQ_t *lib,
+    FKPS lib,
     int *x
 
 )
 {
-    int *sc = &(lib->_stackcounter);
+    LibfkpsDeterminantQ_t *_lib = (LibfkpsDeterminantQ_t *) lib;
 
-    if (lib->determinantQ(x) == 0)
+    if (_lib->determinantQ(x) == 0)
     {
-        memcpy(lib->_partitions[*sc], x, lib->libinfo_N * sizeof(int));
-        (*sc)++;
+        _lib->_mutex->lock();
 
-        if (*sc == FKPS_STACKSIZE)
+        if (_lib->_stackcounter == (FKPS_STACKSIZE-1))
         {
-            LibfkpsDeterminantQDump(lib);
-            (*sc) = 0;
+            LibfkpsDeterminantQDump(_lib);
+            _lib->_stackcounter = 0;
         }
+
+        int sc = _lib->_stackcounter;
+        memcpy(_lib->_partitions + (sc * _lib->libinfo_N), x, _lib->libinfo_N * sizeof(int));
+        _lib->_stackcounter++;
+
+        _lib->_mutex->unlock();
     }
 }
 

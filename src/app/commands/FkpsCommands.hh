@@ -5,12 +5,7 @@
 #include <filesystem>
 
 #include "LibFkpsDeterminantQ.h"
-
-typedef std::filesystem::path FSPATH;
-typedef std::vector<FSPATH> FSPATHV;
-
-typedef LibfkpsDeterminantQ_t FKPSLIB;
-typedef std::vector<FKPSLIB> FKPSLIBV;
+#include "LibFkpsUtils.hh"
 
 int FkpsCommandGenerate(
     

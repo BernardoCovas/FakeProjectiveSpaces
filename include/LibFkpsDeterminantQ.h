@@ -6,28 +6,14 @@
 #include "libfkpsconfig.h"
 
 
-typedef struct
-{
-    int libinfo_N;
-    int libinfo_K;
-    int (*determinantQ)(int *x);
-
-    FILE *file;
-    void *handle;
-    char *filename;
-    char *libname;
-    
-    int *_partitions[FKPS_STACKSIZE];
-    int _stackcounter;
-    int _batchcounter;
-} LibfkpsDeterminantQ_t;
+typedef void *FKPS;
 
 
 /**
  *  Loads the shared library and
  *  allocates the needed memmory.
  */
-LibfkpsDeterminantQ_t *LibfkpsDeterminantQInitLoad(
+FKPS LibfkpsDeterminantQInitLoad(
 
     const char *fname,
     const char *libfname
@@ -41,9 +27,10 @@ LibfkpsDeterminantQ_t *LibfkpsDeterminantQInitLoad(
  */
 void LibfkpsDeterminantQDeInitUnload(
     
-    LibfkpsDeterminantQ_t *lib
+    FKPS lib
 
 );
+
 
 /**
  * Computes one partiton.
@@ -52,10 +39,11 @@ void LibfkpsDeterminantQDeInitUnload(
  */
 void LibfkpsDeterminantQCompute(
     
-    LibfkpsDeterminantQ_t *lib,
+    FKPS lib,
     int *x
 
 );
+
 
 /**
  * Computes all partitons.and
@@ -64,9 +52,19 @@ void LibfkpsDeterminantQCompute(
  */
 void LibfkpsDeterminantQComputeAll(
     
-    LibfkpsDeterminantQ_t *lib
+    FKPS lib
 
 );
 
-#endif // _LIBFKPSDETERMINANTQ_H
 
+/**
+ * Flushes the stack to the file.
+ */
+void LibfkpsDeterminantQDump(
+    
+    FKPS lib
+
+);
+
+
+#endif // _LIBFKPSDETERMINANTQ_H
