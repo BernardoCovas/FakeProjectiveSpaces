@@ -22,6 +22,8 @@ int FkpsCommandCompute(
     printf("Using directory: %s\n", logDir.string().c_str());
     printf("Using %d library files.\n", (int) libPathV.size());
 
+    std::filesystem::create_directories(logDir);
+
     FKPSLIBV loadedLibV;
     
     for (int i=0; i < (int) libPathV.size(); i++)

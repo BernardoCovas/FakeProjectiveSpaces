@@ -125,9 +125,6 @@ int commandAll(int argc, const char *argv[])
   FSPATH cFilePath  (argv[0]);
   std::string       compileCommand(argv[1]);
 
-  std::filesystem::create_directories(detPath);
-  std::filesystem::create_directories(solvedPath);
-
   FSPATHV cFilePathV;
   FSPATHV libPathV;
   int resCode;
