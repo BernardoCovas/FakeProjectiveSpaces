@@ -1,6 +1,7 @@
 #include "LibFkpsUtils.hh"
-#include "LibfkpsDeterminantQ.hh"
+#include "LibFkpsDeterminantQ.hh"
 
+#include <string.h>
 #include <mutex>
 
 LibFkpsPartitionBatchState_t *LibFkpsUtilsStateInit(
