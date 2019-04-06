@@ -4,6 +4,8 @@
 
 #include "FkpsCommands.hh"
 
+#include "LibFkpsLogging.hh"
+
 const char *CFILE_FORMAT = 
 "int libinfo_N = %d;\n"
 "int libinfo_K = %d;\n\n"
@@ -21,7 +23,7 @@ int FkpsCommandGenerate(
 {
 
   std::ifstream infile(cParsedFile);
-  if (!infile.is_open()) { printf("Could not open: %s", cParsedFile.string().c_str()); return -1; }
+  if (!infile.is_open()) { __log_err_fopen(cParsedFile.string().c_str()); return -1; }
 
   std::filesystem::create_directories(genPath);
 
@@ -38,15 +40,18 @@ int FkpsCommandGenerate(
     int libN, libK;
     char *expression = new char[line.size()];
 
-    std::sscanf(line.c_str(), "%d,%d,%[^\t\n]", &libN, &libK, expression);
+    int n = std::sscanf(line.c_str(), "%d,%d,%[^\t\n]", &libN, &libK, expression);
+
+    if (n < 3) { __fkps_err_generate_parse(cParsedFile.string().c_str(), currfile); delete[] expression; continue; }
 
     FILE *file = fopen(cFilePath.string().c_str(), "w");
-    if (!file) { printf("Could not open: %s\n", cFilePath.string().c_str()); return -1; }
+    if (!file) { __log_err_fopen(cFilePath.string().c_str()); delete[] expression; continue; }
 
     fprintf(file, CFILE_FORMAT, libN, libK, expression);
     fclose(file);
-
-    printf("Wrote: %s\n", cFilePath.string().c_str());
+    delete[] expression;
+  
+    __fkps_dbg_generate(cFilePath.string().c_str());
     outPathv.push_back(cFilePath.string());
   }  
 

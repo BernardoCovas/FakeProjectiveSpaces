@@ -1,11 +1,15 @@
+#include "LibFkpsDeterminantQ.h"
+
+#include "FkpsCommands.hh"
+#include "LibFkpsUtils.hh"
+
+#include "LibFkpsLogging.hh"
+
 #include <stdio.h>
 #include <filesystem>
 #include <atomic>
 #include <thread>
 
-#include "FkpsCommands.hh"
-#include "LibFkpsDeterminantQ.h"
-#include "LibFkpsUtils.hh"
 
 
 int FkpsCommandCompute(

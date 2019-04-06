@@ -4,6 +4,8 @@
 #include "LibFkpsDeterminantQ.hh"
 #include "LibFkpsUtils.hh"
 
+#include "LibFkpsLogging.hh"
+
 #include <thread>
 #include <atomic>
 

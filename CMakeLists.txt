@@ -5,7 +5,7 @@ project(FakeProjectiveSpaces)
 set (CMAKE_CXX_STANDARD 17)
 
 file( GLOB __CC_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cc )
-file( GLOB __CC_HDR ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cc )
+file( GLOB __CC_HDR ${CMAKE_CURRENT_SOURCE_DIR}/src/*.hh )
 file( GLOB __C_HDR  ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h )
 
 add_library( libfkps ${__CC_SRC} )
