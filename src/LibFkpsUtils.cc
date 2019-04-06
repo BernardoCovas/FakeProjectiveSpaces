@@ -8,9 +8,6 @@
 #include <atomic>
 
 
-void __fkps_log_started(LibfkpsDeterminantQ_t *lib);
-
-
 #ifdef FKPS_COMPUTE_PARALELL_SINGLELIB
 
 void PartitionConsumeBatch(
@@ -124,8 +121,3 @@ void LibFkpsParallelCompute(
 }
 
 #endif // FKPS_COMPUTE_PARALELL_MULTILIB
-
-void __fkps_log_started(LibfkpsDeterminantQ_t *lib)
-{
-    printf("Starting computing: %s\n", lib->libname);
-}

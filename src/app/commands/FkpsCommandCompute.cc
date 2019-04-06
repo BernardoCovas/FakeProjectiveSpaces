@@ -14,7 +14,7 @@ int FkpsCommandCompute(
     FSPATH   logDir
 
 )
-{    
+{
     printf("Using directory: %s\n", logDir.string().c_str());
     printf("Using %d library files.\n", (int) libPathV.size());
 
@@ -28,24 +28,16 @@ int FkpsCommandCompute(
         logFile /= libPath.filename();
         logFile.replace_extension("csv");
 
-        printf(
-            "Using library: %s, writing to %s\n",
-            libPath.string().c_str(),
-            logFile.string().c_str()
-            );
 
          FKPSLIB lib = (LibfkpsDeterminantQ_t *) LibfkpsDeterminantQInitLoad(
             logFile.string().c_str(),
             libPath.string().c_str()
             );
 
+
         if (lib == NULL)
         {
-            printf(
-                "Could not load: %s\n",
-                libPath.string().c_str()
-                );
-
+            __fkps_err_libloaded(libPath.string().c_str());
             for (int j=0; j<i-1; j++)
                 LibfkpsDeterminantQDeInitUnload(
                     &loadedLibV[j]
@@ -54,6 +46,7 @@ int FkpsCommandCompute(
             return -1;
         }
  
+        __fkps_log_libloaded(lib);
         loadedLibV.push_back(lib);
     }
     
