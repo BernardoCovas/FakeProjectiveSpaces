@@ -34,7 +34,7 @@ int FkpsCommandCompute(
             logFile.string().c_str()
             );
 
-         FKPSLIB *lib = (LibfkpsDeterminantQ_t *) LibfkpsDeterminantQInitLoad(
+         FKPSLIB lib = (LibfkpsDeterminantQ_t *) LibfkpsDeterminantQInitLoad(
             logFile.string().c_str(),
             libPath.string().c_str()
             );
@@ -54,10 +54,10 @@ int FkpsCommandCompute(
             return -1;
         }
  
-        loadedLibV.push_back(*lib);
+        loadedLibV.push_back(lib);
     }
     
     LibFkpsParallelCompute(&loadedLibV, FKPS_COMPUTE_PARALELL);
-
+     
     return 0;
 }

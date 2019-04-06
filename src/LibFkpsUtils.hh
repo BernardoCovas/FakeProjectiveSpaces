@@ -10,8 +10,8 @@
 typedef std::filesystem::path FSPATH;
 typedef std::vector<FSPATH> FSPATHV;
 
-typedef LibfkpsDeterminantQ_t FKPSLIB;
-typedef std::vector<FKPSLIB> FKPSLIBV;
+typedef LibfkpsDeterminantQ_t* FKPSLIB;
+typedef std::vector<FKPSLIB>  FKPSLIBV;
 
 
 /**
@@ -145,7 +145,7 @@ LibFkpsUtilsFreeState(
  * */
 void LibFkpsParallelCompute(
 
-    FKPSLIBV *lib,
+    FKPSLIBV *libV,
     int parallelJobs
     
 );

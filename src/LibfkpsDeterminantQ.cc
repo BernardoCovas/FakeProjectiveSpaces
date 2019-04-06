@@ -196,7 +196,7 @@ void __log_err_fopen(const char *fname)
 void __log_dbg_flush(int batch, const char *fname)
 {
 	static std::atomic_int currLog = 0;
-    printf("\rDBG: [ %d ][ Flushing batch %d to: %s ]", currLog++, batch, fname);
+    printf("DBG: [ %d ][ Flushing batch %d to: %s ]\n", currLog++, batch, fname);
 }
 
 void __log_dbg_unloading(const char *fname)

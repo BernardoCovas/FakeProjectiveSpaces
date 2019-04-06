@@ -27,6 +27,8 @@ void PartitionConsumeBatch(
         state->_mutex->lock();
         batch = LibFkpsUtilsNewBatch(state);
         state->_mutex->unlock();
+
+        int bs = batch->batchSize;
         
         for (int i=0; i<batch->batchSize; i++)
         {
@@ -35,9 +37,10 @@ void PartitionConsumeBatch(
         }
 
         LibFkpsUtilsFreeBatch(batch);
-        if (batch->batchSize == 0) return;
 
+        if (bs == 0) break;
     }
+
 }
 
 
@@ -48,15 +51,14 @@ void LibFkpsParallelCompute(
 
 )
 {
+    std::thread *ts = new std::thread[parallelJobs];
+
     for (auto _lib : (*libV))
     {
-
-
-        LibfkpsDeterminantQ_t *lib = (LibfkpsDeterminantQ_t *) &_lib;
+        LibfkpsDeterminantQ_t *lib = (LibfkpsDeterminantQ_t *) _lib;
         __fkps_log_started(lib);
 
         LibFkpsPartitionBatchState_t *state = LibFkpsUtilsStateInit(lib);
-        std::thread *ts = new std::thread[parallelJobs];
 
         for (int i=0; i<parallelJobs; i++)
             ts[i] = std::thread(&PartitionConsumeBatch, lib, state);
@@ -69,6 +71,8 @@ void LibFkpsParallelCompute(
         LibFkpsUtilsFreeState(state);
         LibfkpsDeterminantQDeInitUnload(lib);
     }
+
+    delete[] ts;
 }
 
 #endif // FKPS_COMPUTE_PARALELL_SINGLELIB
@@ -90,10 +94,10 @@ void FkpsCommandExecute(
       return;
 
     FKPSLIB lib = fkpsLibV->operator[](t_id);
-    __fkps_log_started(&lib);
+    __fkps_log_started(lib);
 
-    LibfkpsDeterminantQComputeAll(&lib);
-    LibfkpsDeterminantQDeInitUnload(&lib);
+    LibfkpsDeterminantQComputeAll(lib);
+    LibfkpsDeterminantQDeInitUnload(lib);
 
   }
 
