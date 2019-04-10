@@ -64,17 +64,6 @@ LibFkpsUtilsPartitionBatch_t *LibFkpsUtilsBatchInit(
  * a new batch of integer partitions
  * for processing.
  * */
-LibFkpsUtilsPartitionBatch_t *LibFkpsUtilsNewBatch(
-
-    LibFkpsPartitionBatchState_t *state,
-    int batchSize
-
-);
-
-
-/**
- * 
- * */
 LibFkpsUtilsPartitionBatch_t *
 LibFkpsUtilsNewBatch(
 
@@ -151,3 +140,17 @@ void LibFkpsParallelCompute(
 );
 
 #endif // _LIBFKPSUTILS_H
+
+/**
+ * Generates a bunch of partitions,
+ * and calls `callback` for each one.
+ * X passed is NOT a copy, and is
+ * needed and changed again.
+ * You should memcpy it.
+ */
+void LibfkpsPartitionGenerate(
+
+	FKPS lib,
+	void (*callback)(FKPS lib, int *x)
+
+);

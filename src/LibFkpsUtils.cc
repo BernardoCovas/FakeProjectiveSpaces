@@ -129,3 +129,51 @@ void LibFkpsParallelCompute(
 }
 
 #endif // FKPS_COMPUTE_PARALELL_MULTILIB
+
+
+void LibfkpsPartitionGenerate(
+
+	FKPS _lib,
+	void (*callback)(FKPS lib, int *x)
+
+)
+{
+	LibfkpsDeterminantQ_t* lib = (LibfkpsDeterminantQ_t*)_lib;
+
+	int n = lib->libinfo_N;
+	int k = lib->libinfo_K;
+	int* v = (int*)malloc(sizeof(int) * n);
+
+	for (int j = 0; j < n; ++j) {
+		v[j] = 1;
+	}
+
+	int cap = k - n + 1;
+	int i, s;
+	v[0] = cap;
+
+	callback(lib, v);
+
+	while (v[n - 1] != cap) {
+
+		i = n;
+		while (v[--i] == 1);
+
+		if (i != n - 1) {
+			--v[i];
+			v[i + 1] = 2;
+		}
+		else {
+			while (v[--i] == 1);
+			--v[i];
+			s = v[n - 1];
+			v[n - 1] = 1;
+			v[i + 1] = s + 1;
+		}
+
+		callback(lib, v);
+
+	}
+
+	free(v);
+}

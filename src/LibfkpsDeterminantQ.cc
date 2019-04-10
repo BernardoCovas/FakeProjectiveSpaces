@@ -1,4 +1,5 @@
 #include "LibFkps.h"
+#include "LibFkpsUtils.hh"
 #include "LibFkpsDeterminantQ.hh"
 
 #include "LibFkpsLogging.hh"
@@ -35,6 +36,7 @@ void LibfkpsDeterminantQDump(
 
 }
 
+
 void LibfkpsDeterminantQComputeAll(
     
     FKPS lib
@@ -46,42 +48,11 @@ void LibfkpsDeterminantQComputeAll(
     int n = _lib->libinfo_N;
     int k = _lib->libinfo_K;
 
-    int *v = (int *) malloc(sizeof(int) * n);
-
-    for (int j = 0; j < n; ++j) {
-        v[j] = 1;
-    }
-
-    int cap = k - n + 1;
-    int i, s;
-    v[0] = cap;
-    
-    LibfkpsDeterminantQCompute(lib, v);
-
-    while (v[n-1] != cap) {
-
-        i = n;
-        while (v[--i] == 1);
-
-        if (i != n-1) {
-            --v[i];
-            v[i+1] = 2;
-        } else {
-            while (v[--i] == 1);
-            --v[i];
-            s = v[n-1];
-            v[n-1] = 1;
-            v[i+1] = s+1;
-        }
-
-        LibfkpsDeterminantQCompute(lib, v);
-
-    }
+	LibfkpsPartitionGenerate(_lib, &LibfkpsDeterminantQCompute);
 
     if(_lib->_stackcounter > 0)
         LibfkpsDeterminantQDump(lib);
 
-    free(v);
 }
 
 void LibfkpsDeterminantQCompute(
