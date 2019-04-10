@@ -1,4 +1,4 @@
-#include "LibFkpsDeterminantQ.h"
+#include "LibFkps.h"
 #include "libfkpsconfig.h"
 
 #include "LibFkpsDeterminantQ.hh"
@@ -52,9 +52,11 @@ void LibFkpsParallelCompute(
 {
     std::thread *ts = new std::thread[parallelJobs];
 
-    for (auto _lib : (*libV))
+    for (FKPSLIB lib : (*libV))
     {
-        LibfkpsDeterminantQ_t *lib = (LibfkpsDeterminantQ_t *) _lib;
+		if (!LibfkpsDeterminantQLoad(lib))
+			continue;
+
         __fkps_log_started(lib);
 
         LibFkpsPartitionBatchState_t *state = LibFkpsUtilsStateInit(lib);
@@ -93,6 +95,10 @@ void FkpsCommandExecute(
       return;
 
     FKPSLIB lib = fkpsLibV->operator[](t_id);
+
+	if (!LibfkpsDeterminantQLoad(lib))
+		continue;
+
     __fkps_log_started(lib);
 
     LibfkpsDeterminantQComputeAll(lib);

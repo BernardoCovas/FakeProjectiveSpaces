@@ -69,7 +69,7 @@ void __fkps_err_libloaded(const char * fname)
 {
     std::stringstream log;
     log << "Failed loading: " << fname;
-    __fkps_dbg(log.str().c_str());
+    __fkps_err(log.str().c_str());
 }
 
 

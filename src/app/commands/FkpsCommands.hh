@@ -4,7 +4,7 @@
 #include <vector>
 #include <filesystem>
 
-#include "LibFkpsDeterminantQ.h"
+#include "LibFkps.h"
 #include "LibFkpsUtils.hh"
 
 int FkpsCommandGenerate(

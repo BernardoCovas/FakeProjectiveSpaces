@@ -8,15 +8,26 @@
 
 typedef void *FKPS;
 
-
 /**
  *  Loads the shared library and
  *  allocates the needed memmory.
  */
-FKPS LibfkpsDeterminantQInitLoad(
+FKPS LibfkpsDeterminantQInit(
 
-    const char *fname,
-    const char *libfname
+	const char* fname,
+	const char* libfname
+
+);
+
+
+/**
+ *  Allocates the needed memmory
+ *  For the partition stack.
+ *  Loads the library.
+ */
+bool LibfkpsDeterminantQLoad(
+
+	FKPS lib
 
 );
 

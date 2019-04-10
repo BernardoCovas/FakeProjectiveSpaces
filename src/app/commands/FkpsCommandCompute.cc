@@ -1,4 +1,4 @@
-#include "LibFkpsDeterminantQ.h"
+#include "LibFkps.h"
 
 #include "FkpsCommands.hh"
 #include "LibFkpsUtils.hh"
@@ -35,7 +35,7 @@ int FkpsCommandCompute(
         logFile.replace_extension("csv");
 
 
-         FKPSLIB lib = (LibfkpsDeterminantQ_t *) LibfkpsDeterminantQInitLoad(
+         FKPSLIB lib = (LibfkpsDeterminantQ_t *) LibfkpsDeterminantQInit(
             logFile.string().c_str(),
             libPath.string().c_str()
             );
@@ -43,12 +43,11 @@ int FkpsCommandCompute(
 
         if (lib == NULL)
         {
-            __fkps_err_libloaded(libPath.string().c_str());
             for (int j=0; j<i-1; j++)
                 LibfkpsDeterminantQDeInitUnload(
                     &loadedLibV[j]
                     );
-            
+
             return -1;
         }
  

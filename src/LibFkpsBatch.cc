@@ -19,7 +19,8 @@ LibFkpsPartitionBatchState_t *LibFkpsUtilsStateInit(
 
     outState->v = (int *) malloc(sizeof(int) * lib->libinfo_N);
     outState->v[0] = outState->_cap;
-    for (int i=1; i<lib->libinfo_N; i++)
+
+	for (int i=1; i<lib->libinfo_N; i++)
         outState->v[i] = 1;
 
     outState->_mutex = new std::mutex;

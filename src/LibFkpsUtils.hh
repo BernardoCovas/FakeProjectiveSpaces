@@ -1,7 +1,7 @@
 #ifndef  _LIBFKPSUTILS_H
 #define _LIBFKPSUTILS_H
 
-#include "LibFkpsDeterminantQ.h"
+#include "LibFkps.h"
 #include "LibFkpsDeterminantQ.hh"
 
 #include <vector>

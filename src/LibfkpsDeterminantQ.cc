@@ -1,4 +1,4 @@
-#include "LibFkpsDeterminantQ.h"
+#include "LibFkps.h"
 #include "LibFkpsDeterminantQ.hh"
 
 #include "LibFkpsLogging.hh"
@@ -12,81 +12,6 @@
 #include <array>
 #include <mutex>
 
-
-FKPS LibfkpsDeterminantQInitLoad(
-
-    const char *fname,
-    const char *libfname
-
-)
-{
-
-    LibfkpsDeterminantQ_t *lib = (LibfkpsDeterminantQ_t *) malloc(sizeof(LibfkpsDeterminantQ_t));
-    if (!lib) { __log_err_malloc(); return NULL;}
-
-    lib->filename    = new std::string(fname);
-    lib->libname     = new std::string(libfname);
-    lib->_mutex      = new std::mutex;
-    lib->file        = fopen(fname, "w");
-    lib->handle      = dlopen(libfname, RTLD_NOW);
-    lib->_partitions = NULL;
-
-    const char  *whatFailed;
-
-    if (!lib->file)   { whatFailed = lib->filename->c_str(); goto LOAD_FAILED; }
-    if (!lib->handle) { whatFailed = lib->libname ->c_str(); goto LOAD_FAILED; }
-
-    lib->_stackcounter = 0;
-    lib->_batchcounter = 0;
-    lib->libinfo_N     = *(int *)         dlsym(lib->handle, "libinfo_N");
-    lib->libinfo_K     = *(int *)         dlsym(lib->handle, "libinfo_K");
-    lib->determinantQ  =  (int (*)(int *)) dlsym(lib->handle, "determinantQ");
-    lib->_partitions   =  (int *) malloc(lib->libinfo_N * sizeof(int) * FKPS_STACKSIZE);
-
-    if (!(lib->libinfo_N) || !(lib->libinfo_K) || !(lib->determinantQ))
-    { 
-        __log_err_malloc();
-        whatFailed = lib->libname->c_str();
-        goto LOAD_FAILED;
-    }
-
-    if (!lib->_partitions) {
-        __log_err_malloc();
-        whatFailed = lib->libname->c_str();
-        goto LOAD_FAILED;
-    }
-
-    return (FKPS) lib;
-
-
-LOAD_FAILED:
-
-    __log_err_fopen(whatFailed);
-    LibfkpsDeterminantQDeInitUnload((FKPS) lib);
-    return NULL;
-
-}
-
-void LibfkpsDeterminantQDeInitUnload(
-    
-    FKPS lib
-
-)
-{
-    LibfkpsDeterminantQ_t *_lib = (LibfkpsDeterminantQ_t *) lib;
-
-    __log_dbg_unloading(_lib->libname->c_str());
-
-    free(_lib->_partitions);
-    if(_lib->file   )    fclose(_lib->file);
-    if(_lib->handle )    dlclose(_lib->handle);
-    
-    delete _lib->_mutex;
-    delete _lib->filename;
-    delete _lib->libname;
-    
-    free(_lib);
-}
 
 void LibfkpsDeterminantQDump(
     

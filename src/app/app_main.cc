@@ -5,7 +5,7 @@
 #include <atomic>
 #include <filesystem>
 
-#include "LibFkpsDeterminantQ.h"
+#include "LibFkps.h"
 #include "libfkpsconfig.h"
 #include "commands/FkpsCommands.hh"
 
