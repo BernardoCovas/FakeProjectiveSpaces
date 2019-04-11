@@ -44,11 +44,12 @@ void LibfkpsDeterminantQComputeAll(
 )
 {
     LibfkpsDeterminantQ_t *_lib = (LibfkpsDeterminantQ_t *) lib;
+	LibFkpsBatch_t* state = LibFkpsBatchInit(_lib);
 
-    int n = _lib->libinfo_N;
-    int k = _lib->libinfo_K;
-
-	LibfkpsPartitionGenerate(_lib, &LibfkpsDeterminantQCompute);
+	while (FkpsBatchIncrement(state))
+	{
+		LibfkpsDeterminantQCompute(lib, state->v);
+	}
 
     if(_lib->_stackcounter > 0)
         LibfkpsDeterminantQDump(lib);

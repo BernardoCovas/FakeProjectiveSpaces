@@ -15,27 +15,27 @@
 void PartitionConsumeBatch(
 
     LibfkpsDeterminantQ_t *lib,
-    LibFkpsPartitionBatchState_t *state
+	LibFkpsBatch_t *state
 
 )
 {
-    LibFkpsUtilsPartitionBatch_t *batch;
+    LibFkpsBatch_t *batch;
 
     while(true)
     {
         state->_mutex->lock();
-        batch = LibFkpsUtilsNewBatch(state);
+        batch = LibFkpsBatchNew(state);
         state->_mutex->unlock();
 
         int bs = batch->batchSize;
         
         for (int i=0; i<batch->batchSize; i++)
         {
-            int *batchV = LibFkpsUtilsBatchGet(batch, i);
-            LibfkpsDeterminantQCompute(lib, batchV);
+			FkpsBatchIncrement(batch);
+            LibfkpsDeterminantQCompute(lib, batch->v);
         }
 
-        LibFkpsUtilsFreeBatch(batch);
+        LibFkpsBatchFree(batch);
 
         if (bs == 0) break;
     }
@@ -58,8 +58,8 @@ void LibFkpsParallelCompute(
 			continue;
 
         __fkps_log_started(lib);
-
-        LibFkpsPartitionBatchState_t *state = LibFkpsUtilsStateInit(lib);
+        
+		LibFkpsBatch_t *state = LibFkpsBatchInit(lib);
 
         for (int i=0; i<parallelJobs; i++)
             ts[i] = std::thread(&PartitionConsumeBatch, lib, state);
@@ -69,7 +69,7 @@ void LibFkpsParallelCompute(
         if (lib->_stackcounter > 0)
             LibfkpsDeterminantQDump(lib);
 
-        LibFkpsUtilsFreeState(state);
+        LibFkpsBatchFree(state);
         LibfkpsDeterminantQDeInitUnload(lib);
     }
 
@@ -131,49 +131,16 @@ void LibFkpsParallelCompute(
 #endif // FKPS_COMPUTE_PARALELL_MULTILIB
 
 
-void LibfkpsPartitionGenerate(
+#ifdef FKPS_COMPUTE_CUDA_SINGLELIB
 
-	FKPS _lib,
-	void (*callback)(FKPS lib, int *x)
+void LibFkpsParallelCompute(
+
+	FKPSLIBV* lib,
+	int parallelJobs
 
 )
 {
-	LibfkpsDeterminantQ_t* lib = (LibfkpsDeterminantQ_t*)_lib;
 
-	int n = lib->libinfo_N;
-	int k = lib->libinfo_K;
-	int* v = (int*)malloc(sizeof(int) * n);
-
-	for (int j = 0; j < n; ++j) {
-		v[j] = 1;
-	}
-
-	int cap = k - n + 1;
-	int i, s;
-	v[0] = cap;
-
-	callback(lib, v);
-
-	while (v[n - 1] != cap) {
-
-		i = n;
-		while (v[--i] == 1);
-
-		if (i != n - 1) {
-			--v[i];
-			v[i + 1] = 2;
-		}
-		else {
-			while (v[--i] == 1);
-			--v[i];
-			s = v[n - 1];
-			v[n - 1] = 1;
-			v[i + 1] = s + 1;
-		}
-
-		callback(lib, v);
-
-	}
-
-	free(v);
 }
+
+#endif // FKPS_COMPUTE_CUDA_SINGLELIB

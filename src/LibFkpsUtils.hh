@@ -19,42 +19,31 @@ typedef std::vector<FKPSLIB>  FKPSLIBV;
  * */
 typedef struct
 {
-    int *batch;
-    int  batchSize;
-    int  N;
-} LibFkpsUtilsPartitionBatch_t;
-
-/**
- * 
- * */
-typedef struct
-{
     int batchSize;
     int N;
-    int K;
     int *v;
-    int _cap, _i;
+    int _cap;
     std::mutex *_mutex;
-} LibFkpsPartitionBatchState_t;
+} LibFkpsBatch_t;
 
 
 /**
- * 
+ * Initializes a batch struct from lib.
  * */
-LibFkpsPartitionBatchState_t *
-LibFkpsUtilsStateInit(
+LibFkpsBatch_t*
+LibFkpsBatchInit(
     
     LibfkpsDeterminantQ_t *lib
 
 );
 
 
-/**
- * New `Minibatch` / `BatchState` allocation.
- * */
-LibFkpsUtilsPartitionBatch_t *LibFkpsUtilsBatchInit(
+/*
+ * Copy a batch. Allocates memory.
+ */
+LibFkpsBatch_t* LibFkpsBatchCopy(
 
-    LibFkpsPartitionBatchState_t *batchSate
+	LibFkpsBatch_t* state
 
 );
 
@@ -63,42 +52,24 @@ LibFkpsUtilsPartitionBatch_t *LibFkpsUtilsBatchInit(
  * Gets the state and generates
  * a new batch of integer partitions
  * for processing.
+ * Changes `state`.
  * */
-LibFkpsUtilsPartitionBatch_t *
-LibFkpsUtilsNewBatch(
+LibFkpsBatch_t *
+LibFkpsBatchNew(
 
-    LibFkpsPartitionBatchState_t *state
+	LibFkpsBatch_t *state
 
 );
 
 
-/**
- * Gets a batch by index.
- * Index must be smaller than MINIBATCH_SIZE 
- * of course.
- * */
-int *LibFkpsUtilsBatchGet(
-    
-    LibFkpsUtilsPartitionBatch_t *batch,
-    int index
+/*
+ * Increments the batch state by one,
+ * returns false if there are no
+ * more partitions.
+ */
+inline bool FkpsBatchIncrement(
 
-);
-
-
-/**
- * Adds a batch to the data storage.
- * Convenient function.
- * Equivalent to setting the pointer
- * `index` (`N` * `index`) to `newBatch`.
- * 
- * `index` must be smaller than
- * MINIBATCH_SIZE of course.
- * */
-void LibFkpsUtilsBatchAdd(
-
-    LibFkpsUtilsPartitionBatch_t *batch,
-    int *newBatch,
-    int index
+	LibFkpsBatch_t* state
 
 );
 
@@ -106,20 +77,10 @@ void LibFkpsUtilsBatchAdd(
 /**
  * Releases the resources allocated to the minibatch.
  * */
-void LibFkpsUtilsFreeBatch(
-    
-    LibFkpsUtilsPartitionBatch_t *batch
-    
-);
-
-
-/**
- * 
- * */
 void
-LibFkpsUtilsFreeState(
+LibFkpsBatchFree(
     
-    LibFkpsPartitionBatchState_t *state
+	LibFkpsBatch_t *state
     
 );
 
@@ -140,17 +101,3 @@ void LibFkpsParallelCompute(
 );
 
 #endif // _LIBFKPSUTILS_H
-
-/**
- * Generates a bunch of partitions,
- * and calls `callback` for each one.
- * X passed is NOT a copy, and is
- * needed and changed again.
- * You should memcpy it.
- */
-void LibfkpsPartitionGenerate(
-
-	FKPS lib,
-	void (*callback)(FKPS lib, int *x)
-
-);

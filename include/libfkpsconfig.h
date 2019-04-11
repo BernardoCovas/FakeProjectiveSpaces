@@ -18,6 +18,13 @@
  * */
 #define FKPS_COMPUTE_PARALELL_SINGLELIB
 
+ /**
+  * Speeds up the computation of
+  * a single determinant by using the GPU.
+  * Solves each compiled lib sequentially.
+  * */
+// #define FKPS_COMPUTE_CUDA_SINGLELIB
+
 /**
  * Speeds up the computation of multiple
  * compiled libs. It's more efficient
