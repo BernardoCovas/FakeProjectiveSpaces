@@ -70,7 +70,14 @@ int main(int argc, char* argv[])
 		LibFkpsBatchInit(lib, &state);
 		LibFkpsBatchNew(state, &batch);
 
-		LibFkpsBatchCompute(batch, lib);
+		while (true)
+		{
+			LibFkpsErr_t errCode = LibFkpsBatchCompute(batch, lib);
+			if(errCode == LIBFKPS_ERR_PARTITION_FULL)
+				LibFkpsBatchFlush(batch, lib);
+			if (errCode == LIBFKPS_ERR_SUCCESS)
+				break;
+		}
 		
 		LibFkpsDeinit(lib);
 		printf("Unloaded: %d\n", i++);
