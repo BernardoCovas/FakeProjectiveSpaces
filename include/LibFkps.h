@@ -52,6 +52,15 @@ LibFkpsErr_t LibFkpsCompile(FKPS lib);
 
 
 /*
+ * Loads the function to memory.
+ * Must be compiled.
+ * Returns `LIBFKPS_ERR_SUCCESS` if loaded,
+ * anything else on error.
+ */
+LibFkpsErr_t LibFkpsLoad(FKPS lib);
+
+
+/*
  * Initializes a batch.
  */
 LibFkpsErr_t LibFkpsBatchInit(FKPS lib, FKPSBatch* batch);
@@ -93,6 +102,17 @@ LibFkpsErr_t LibFkpsBatchGet(FKPSBatch batch, int index, int** outV);
  * Writes the partitions in `batch` to the file.
  */
 LibFkpsErr_t LibFkpsBatchFlush(FKPSBatch batch, FKPS lib);
+
+
+/*
+ * Computes the `batch` on `lib`. Stores
+ * the valid partitions in `batch`.
+ * Returns when `batch`'s partitions
+ * are full, when computation is done,
+ * or when any other error occurs, returning
+ * the corresponding errors.
+ */
+LibFkpsErr_t LibFkpsBatchCompute(FKPSBatch batch, FKPS lib);
 
 
 #endif /* _LIBFKPS_H */
