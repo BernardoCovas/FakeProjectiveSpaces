@@ -15,7 +15,7 @@ if(FKPS_CUDA_SUPPORT)
 	find_library(CUDA_NVRTC_LIB libnvrtc nvrtc HINTS "${CUDA_TOOLKIT_ROOT_DIR}/lib64" "${LIBNVRTC_LIBRARY_DIR}" "${CUDA_TOOLKIT_ROOT_DIR}/lib/x64" "/usr/lib64" "/usr/local/cuda/lib64")
 
 	target_include_directories(libfkps PUBLIC ${CUDA_INCLUDE_DIRS})
-	target_link_libraries(libfkps ${CUDA_NVRTC_LIB})
+	target_link_libraries(libfkps PUBLIC ${CUDA_NVRTC_LIB})
 else()
 	list(APPEND LIBFKPS_CC_SRCS ${LIBFKPS_CU_CC_SRCS})
 
