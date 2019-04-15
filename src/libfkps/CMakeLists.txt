@@ -23,3 +23,7 @@ else()
 	add_library(libfkps ${LIBFKPS_CC_SRCS})
 endif(FKPS_CUDA_SUPPORT)
 
+if (WIN32)
+  find_package(dlfcn-win32 REQUIRED)
+  target_link_libraries(libfkps PRIVATE dlfcn-win32::dl)
+endif () 
