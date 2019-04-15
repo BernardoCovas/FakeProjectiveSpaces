@@ -1,55 +1,32 @@
-#ifndef _LIBFKPSCONFIG_H
-#define _LIBFKPSCONFIG_H
+#ifndef _LIBFKPS_CONFIG_H
+#define _LIBFKPS_CONFIG_H
 
 
-/**
- * Number of parallel workers.
- * */
-#define FKPS_COMPUTE_PARALELL 8
+/*
+ * Batch Size computed by each thread.
+ */
+#define LIBFKPS_THREAD_BATCHSIZE 10000;
+
+/*
+ * Compile command used when not using CUDA.
+ */
+#define LIBFKPS_COMPILE_COMMAND "gcc %i -o %o -shared -O3"
+
+/*
+ * Internal folder name.
+ */
+#define LIBFKPS_FOLDER_INTERNAL ".fkps"
+
+/*
+ * Folder to store the solutions.
+ */
+
+#define LIBFKPS_SOLVED_FOLDER "solved"
+
+/*
+ * Use CUDA. Set in CMakeLists.txt.
+ */
+// #define LIBFKPS_USE_CUDA
 
 
-/* ONE OF THESE NEXT OPTIONS */ 
-
-/**
- * Speeds up the computation of
- * a single determinant.
- * Solves each compiled lib sequentially,
- * but parallelizes it's computations.
- * */
-#define FKPS_COMPUTE_PARALELL_SINGLELIB
-
- /**
-  * Speeds up the computation of
-  * a single determinant by using the GPU.
-  * Solves each compiled lib sequentially.
-  * */
-// #define FKPS_COMPUTE_CUDA_SINGLELIB
-
-/**
- * Speeds up the computation of multiple
- * compiled libs. It's more efficient
- * than the previous option, but a single lib
- * still takes as long to finish as a sequential
- * computation.
- * */
-// #define FKPS_COMPUTE_PARALELL_MULTILIB
-
-
-/**
- * The size of the stack holding the solutions
- * before flushing them to disk.
- * */
-#define FKPS_STACKSIZE 1000000
-
-/**
- * The size of the generated integer
- * partitions batch that a single 
- * thread computes. The ideal value
- * is not exact science, play arround
- * with it until you get the best results.
- * You should be able to get 100% CPU usage.
- * */
-#define FKPS_MINIBATCH_SIZE 10000
-
-
-#endif // _LIBFKPSCONFIG_H
+#endif /* _LIBFKPS_CONFIG_H */
