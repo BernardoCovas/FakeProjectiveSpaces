@@ -3,7 +3,7 @@
 project ("FakeProjectiveSpaces" LANGUAGES C CXX CUDA)
 set (CMAKE_CXX_STANDARD 17)
 
-option(FKPS_CUDA_SUPPORT "Compile with cuda support" ON)
+option(FKPS_CUDA_SUPPORT "Compile with cuda support" OFF)
 
 add_subdirectory("./src/libfkps")
 add_subdirectory("./src/app")

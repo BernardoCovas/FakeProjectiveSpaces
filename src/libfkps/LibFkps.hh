@@ -18,8 +18,8 @@ typedef struct
 	int libinfoK;
 	std::string* detExprs;
 
-	void* CUfunction;
 	void* function;
+	void* libHandle;
 
 	std::mutex* mutex;
 } LibFkps_t;

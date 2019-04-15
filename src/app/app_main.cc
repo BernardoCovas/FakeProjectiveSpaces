@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
 		++currline;
 	
 		FKPS fkps = nullptr;
-		LibFkpsErr_t err_code;
+		LibFkpsErr_t err_code = LIBFKPS_ERR_LIB_NOT_FOUND;
 		int libinfoN;
 		int libinfoK;
 		
@@ -45,6 +45,11 @@ int main(int argc, char* argv[])
 		if (err_code != LIBFKPS_ERR_SUCCESS)
 			goto LIBLOAD_FAILED;
 
+		err_code = LibFkpsLoad(fkps);
+		if (err_code != LIBFKPS_ERR_SUCCESS)
+			goto LIBLOAD_FAILED;
+
+
 		fkpsV.push_back(fkps);
 		printf("Completed: %d with: %s\n", currline, LibFkpsErrToChar(err_code));
 		continue;
@@ -57,10 +62,16 @@ int main(int argc, char* argv[])
 
 	infile.close();
 
+	FKPSBatch batch, state;
+
 	int i = 0;
 	for (FKPS lib : fkpsV)
 	{
+		LibFkpsBatchInit(lib, &state);
+		LibFkpsBatchNew(state, &batch);
 
+		LibFkpsBatchCompute(batch, lib);
+		
 		LibFkpsDeinit(lib);
 		printf("Unloaded: %d\n", i++);
 	}

@@ -24,6 +24,7 @@ LibFkpsErr_t LibFkpsBatchInit(FKPS _lib, FKPSBatch* _batch)
 
 	int* v = new(std::nothrow) int[lib->libinfoN];
 	if (!v) goto MALLOC_FAILED;
+	batch->v = v;
 
 	v[0] = batch->cap;
 	for (int i = 1; i < lib->libinfoN; i++)
