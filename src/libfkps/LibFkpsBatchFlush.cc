@@ -14,10 +14,11 @@ LibFkpsErr_t LibFkpsBatchFlush(FKPSBatch _batch, FKPS _lib)
 	{
 		int* v;
 		LibFkpsBatchGet(batch, i, &v); //TODO (bcovas): Error check
-		for (int j = 0; i < batch->N; i++)
+		for (int j = 0; j < batch->N; j++)
 		{
-			fprintf(lib->solFile, j<batch->N - 1?"%d,":"%d\n", v[j]);
+			fprintf(lib->solFile, j<(batch->N - 1)?"%d,":"%d\n", v[j]);
 		}
-
 	}
+	batch->stackSize = 0;
+	lib->mutex->unlock();
 }

@@ -17,7 +17,6 @@ LibFkpsErr_t LibFkpsBatchCompute(FKPSBatch _batch, FKPS _lib)
 	while (true)
 	{
 		int outRes;
-		int outRes;
 		function(batch->v, &outRes);
 
 		if (outRes == 0)

@@ -10,10 +10,10 @@ LibFkpsErr_t LibFkpsBatchGet(FKPSBatch _batch, int index, int** outV)
 	if (!batch->vPart)
 		return LIBFKPS_ERR_PARTITION_INIT;
 
-	if (index > batch->N)
+	if (index > batch->stackSize)
 		return LIBFKPS_ERR_PARTITION_INDEX_RANGE;
 
-	(*outV) = batch->vPart + (index * batch->N);
+	(*outV) = batch->vPart + ((size_t) index * batch->N);
 
 	return LIBFKPS_ERR_SUCCESS;
 }
