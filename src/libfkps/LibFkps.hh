@@ -5,6 +5,8 @@
 #include <mutex>
 #include <string>
 
+typedef void(*FkpsFunction_t)(int* x, int* outRes);
+
 typedef struct
 {
 	int libIndex;
