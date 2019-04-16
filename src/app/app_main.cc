@@ -2,9 +2,50 @@
 
 #include <stdio.h>
 #include <thread>
+#include <future>
 #include <string>
 #include <vector>
 #include <fstream>
+
+
+void ComputeAll(FKPS lib, FKPSBatch state)
+{
+	static int currBatch = 0;
+	printf("Thread started.\n");
+
+	std::future<LibFkpsErr_t> nextErrCode;
+	FKPSBatch batch;
+	FKPSBatch nextBatch;
+	
+	nextErrCode = std::async(LibFkpsBatchNew, state, &nextBatch);
+
+	while (true)
+	{
+		LibFkpsErr_t errCode = nextErrCode.get();
+		batch = nextBatch;
+
+		if (errCode != LIBFKPS_ERR_PARTITION_END)
+			nextErrCode = std::async(LibFkpsBatchNew, state, &nextBatch);
+		
+		int currThreadBatch = ++currBatch;
+		printf("Batch started.\n");
+		
+		while (LibFkpsBatchCompute(batch, lib) == LIBFKPS_ERR_PARTITION_FULL)
+		{
+			printf("Saving batch: %d\n", currThreadBatch);
+			LibFkpsBatchFlush(batch, lib);
+		}
+
+		printf("Last flush of: %d\n", currThreadBatch);
+		LibFkpsBatchFlush(batch, lib);
+		LibFkpsBatchFree(batch);
+
+		if (errCode == LIBFKPS_ERR_PARTITION_END)
+			break;
+	}
+
+	printf("Thread exited.\n");
+}
 
 int main(int argc, char* argv[])
 {
@@ -62,28 +103,21 @@ int main(int argc, char* argv[])
 
 	infile.close();
 
-	FKPSBatch batch, state;
 
-	int i = 0;
+	std::thread *threadV = new std::thread[16];
 	for (FKPS lib : fkpsV)
 	{
+		FKPSBatch state;
 		LibFkpsBatchInit(lib, &state);
-		LibFkpsBatchNew(state, &batch);
 
-		while (true)
-		{
-			LibFkpsErr_t errCode = LibFkpsBatchCompute(batch, lib);
-			if(errCode == LIBFKPS_ERR_PARTITION_FULL)
-				LibFkpsBatchFlush(batch, lib);
-			if (errCode == LIBFKPS_ERR_SUCCESS)
-				break;
-		}
-		
+		for (int i = 0; i < 16; i++)
+			threadV[i] = std::thread(&ComputeAll, lib, state);
+		for (int i = 0; i < 16; i++)
+			threadV[i].join();
+
 		LibFkpsDeinit(lib);
-		printf("Unloaded: %d\n", i++);
+		LibFkpsBatchFree(state);
 	}
-
-
-
-	return 0;
+	
+	delete[] threadV;
 }

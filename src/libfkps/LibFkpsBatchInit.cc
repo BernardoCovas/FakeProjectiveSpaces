@@ -14,7 +14,7 @@ LibFkpsErr_t LibFkpsBatchInit(FKPS _lib, FKPSBatch* _batch)
 
 	batch->mutex = new std::mutex;
 	
-	batch->batchSize = LIBFKPS_THREAD_BATCHSIZE;
+	batch->batchSize = LIBFKPS_BATCHSIZE;
 	batch->stackSize = 0;
 
 	batch->K = lib->libinfoK;

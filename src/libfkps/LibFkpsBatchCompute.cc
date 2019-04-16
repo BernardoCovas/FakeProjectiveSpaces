@@ -14,21 +14,16 @@ LibFkpsErr_t LibFkpsBatchCompute(FKPSBatch _batch, FKPS _lib)
 
 	FkpsFunction_t function = (FkpsFunction_t)lib->function;
 
-	while (true)
+	for (int i = 0; i<batch->batchSize; i++)
 	{
 		int outRes;
 		function(batch->v, &outRes);
 
 		if (outRes == 0)
-		{
-			errCode = LibFkpsBatchAdd(batch, batch->v);
-			if (errCode == LIBFKPS_ERR_PARTITION_FULL)
-				return errCode;
-		}
+			if (LibFkpsBatchAdd(batch, batch->v) == LIBFKPS_ERR_PARTITION_FULL)
+				return LIBFKPS_ERR_PARTITION_FULL;
 
-		errCode = LibFkpsBatchIncrement(_batch);
-		if (errCode == LIBFKPS_ERR_PARTITION_END)
-			break;
+		LibFkpsBatchIncrement(_batch);
 	}
 
 	return LIBFKPS_ERR_SUCCESS;
