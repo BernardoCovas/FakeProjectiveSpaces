@@ -8,45 +8,6 @@
 #include <fstream>
 
 
-void ComputeAll(FKPS lib, FKPSBatch state)
-{
-	static int currBatch = 0;
-	printf("Thread started.\n");
-
-	std::future<LibFkpsErr_t> nextErrCode;
-	FKPSBatch batch;
-	FKPSBatch nextBatch;
-	
-	nextErrCode = std::async(LibFkpsBatchNew, state, &nextBatch);
-
-	while (true)
-	{
-		LibFkpsErr_t errCode = nextErrCode.get();
-		batch = nextBatch;
-
-		if (errCode != LIBFKPS_ERR_PARTITION_END)
-			nextErrCode = std::async(LibFkpsBatchNew, state, &nextBatch);
-		
-		int currThreadBatch = ++currBatch;
-		printf("Batch started.\n");
-		
-		while (LibFkpsBatchCompute(batch, lib) == LIBFKPS_ERR_PARTITION_FULL)
-		{
-			printf("Saving batch: %d\n", currThreadBatch);
-			LibFkpsBatchFlush(batch, lib);
-		}
-
-		printf("Last flush of: %d\n", currThreadBatch);
-		LibFkpsBatchFlush(batch, lib);
-		LibFkpsBatchFree(batch);
-
-		if (errCode == LIBFKPS_ERR_PARTITION_END)
-			break;
-	}
-
-	printf("Thread exited.\n");
-}
-
 int main(int argc, char* argv[])
 {
 	if (argc < 2)
@@ -77,47 +38,19 @@ int main(int argc, char* argv[])
 		delete[] express;
 		if (err_code != LIBFKPS_ERR_SUCCESS)
 			goto LIBLOAD_FAILED;
-		
-		err_code = LibFkpsGenerate(fkps);
+
+		err_code = LibFkpsSolve(fkps, true);
 		if (err_code != LIBFKPS_ERR_SUCCESS)
 			goto LIBLOAD_FAILED;
 
-		err_code = LibFkpsCompile(fkps);
-		if (err_code != LIBFKPS_ERR_SUCCESS)
-			goto LIBLOAD_FAILED;
-
-		err_code = LibFkpsLoad(fkps);
-		if (err_code != LIBFKPS_ERR_SUCCESS)
-			goto LIBLOAD_FAILED;
-
-
-		fkpsV.push_back(fkps);
-		printf("Completed: %d with: %s\n", currline, LibFkpsErrToChar(err_code));
+		printf("[ APP ] Completed: %d with: %s\n", currline, LibFkpsErrToChar(err_code));
 		continue;
 
 	LIBLOAD_FAILED:
 		
-		printf("Failed: %d with code: %s\n", currline, LibFkpsErrToChar(err_code));
+		printf("[ APP ] Failed: %d with code: %s\n", currline, LibFkpsErrToChar(err_code));
 		LibFkpsDeinit(fkps);
 	}
 
 	infile.close();
-
-
-	std::thread *threadV = new std::thread[16];
-	for (FKPS lib : fkpsV)
-	{
-		FKPSBatch state;
-		LibFkpsBatchInit(lib, &state);
-
-		for (int i = 0; i < 16; i++)
-			threadV[i] = std::thread(&ComputeAll, lib, state);
-		for (int i = 0; i < 16; i++)
-			threadV[i].join();
-
-		LibFkpsDeinit(lib);
-		LibFkpsBatchFree(state);
-	}
-	
-	delete[] threadV;
 }

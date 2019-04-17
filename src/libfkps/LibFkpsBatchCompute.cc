@@ -2,7 +2,6 @@
 
 #include "LibFkps.hh"
 
-typedef void (*FkpsFunction_t)(int *x, int *outRes);
 
 LibFkpsErr_t LibFkpsBatchCompute(FKPSBatch _batch, FKPS _lib)
 {
@@ -11,7 +10,6 @@ LibFkpsErr_t LibFkpsBatchCompute(FKPSBatch _batch, FKPS _lib)
 	LibFkpsBatch_t* batch = (LibFkpsBatch_t*)_batch;
 	
 	if (!lib->function) return LIBFKPS_ERR_LIB_NOT_FOUND;
-
 	FkpsFunction_t function = (FkpsFunction_t)lib->function;
 
 	for (int i = 0; i<batch->batchSize; i++)

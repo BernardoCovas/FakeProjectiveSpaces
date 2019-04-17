@@ -61,6 +61,16 @@ LibFkpsErr_t LibFkpsLoad(FKPS lib);
 
 
 /*
+ * Prepares `lib`, compiles it, loads it
+ * and calculates and saves
+ * `lib's` solutions. Returns when all
+ * solutions were found and saved,
+ * or if any error occurs.
+ */
+LibFkpsErr_t LibFkpsSolve(FKPS lib, bool verbose);
+
+
+/*
  * Initializes a batch.
  */
 LibFkpsErr_t LibFkpsBatchInit(FKPS lib, FKPSBatch* batch);

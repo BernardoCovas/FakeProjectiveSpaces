@@ -6,18 +6,25 @@
 #include <stdio.h>
 
 
-const char* FILE_FORMAT = 
+const char* FILE_FORMAT =
+"#ifdef __cplusplus\n"
+"extern \"C\" {\n"
+"#endif\n"
+
 "const int libinfo_N = %d;\n"
 "const int libinfo_K = %d;\n\n"
 
 #ifdef LIBFKPS_USE_CUDA
-"__global__\n"
+"extern \"C\" __global__\n"
 #endif
 
 "void determinantQ(int *x, int *outRes)\n"
 "{\n"
 "	(*outRes) = %s;\n"
 "}\n"
+"#ifdef __cplusplus\n"
+"\n}\n"
+"#endif\n"
 ;
 
 

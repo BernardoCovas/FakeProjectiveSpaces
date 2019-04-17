@@ -7,6 +7,10 @@
 #include <sstream>
 #include <filesystem>
 
+#ifdef LIBFKPS_USE_CUDA
+#include <cuda.h>
+#endif
+
 
 typedef std::filesystem::path FSPATH;
 
@@ -25,12 +29,13 @@ LibFkpsErr_t LibFkpsInit(FKPS* _lib, int N, int K, const char* detExprs)
 	std::ostringstream solFileName;
 
 #ifdef LIBFKPS_USE_CUDA
-	cFileName << libindex << ".cu";
+	cFileName	<< libindex << ".cu";
+	libFileName << libindex << ".ptx";
 #else
 	cFileName   << libindex << ".c";
+	libFileName << libindex << ".so";
 #endif
 
-	libFileName << libindex << ".lib";
 	solFileName << libindex << ".csv";
 
 	FSPATH cFilePath  (LIBFKPS_FOLDER_INTERNAL);
@@ -71,6 +76,13 @@ LibFkpsErr_t LibFkpsInit(FKPS* _lib, int N, int K, const char* detExprs)
 	lib->libFileName = new std::string(libFilePath.string());
 
 	(*_lib) = lib;
+
+#ifdef LIBFKPS_USE_CUDA
+	CUcontext cntxt;
+	cuInit(0);
+	cuCtxCreate(&cntxt, 0, 0);
+	lib->libHandle = (void*)cntxt;
+#endif
 
 	return LIBFKPS_ERR_SUCCESS;
 }
