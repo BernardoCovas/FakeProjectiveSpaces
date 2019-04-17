@@ -19,7 +19,7 @@ LibFkpsErr_t LibFkpsLoad(FKPS _lib)
 		return LIBFKPS_ERR_LIB_NOT_FOUND;
 
 	CUfunction  function;
-	resCode = cuModuleGetFunction(&function, cuModule, "determinantQ");
+	resCode = cuModuleGetFunction(&function, cuModule, "cudaAllSolve");
 	if (resCode != CUDA_SUCCESS)
 	{
 		cuModuleUnload(cuModule);

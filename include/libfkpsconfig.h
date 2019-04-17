@@ -1,11 +1,24 @@
 #ifndef _LIBFKPS_CONFIG_H
 #define _LIBFKPS_CONFIG_H
 
+/*
+ * Parallel workers, when not using CUDA.
+ */
+
+#define LIBFKPS_PARALLEL 16
 
 /*
- * Batch Size computed by each thread.
+ * Batch Size, when batch is created
+ * with `LibFkpsBatchNew()`.
+ * Does not influence memory usage.
  */
-#define LIBFKPS_THREAD_BATCHSIZE 10000;
+#define LIBFKPS_BATCHSIZE 100000;
+
+/*
+ * The size of the stack, before having
+ * to be flushed.
+ */
+#define LIBFKPS_STACKSIZE 1000000
 
 /*
  * Compile command used when not using CUDA.

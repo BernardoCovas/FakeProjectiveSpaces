@@ -18,45 +18,33 @@ void cudaSolve(FKPS _lib, FKPSBatch _batch)
 
 	CUfunction* function = (CUfunction*)lib->function;
 
-	CUdeviceptr* xV		 = new CUdeviceptr[batch->batchSize];
-	CUdeviceptr* outResV = new CUdeviceptr[batch->batchSize];
+	int devBatchSize = batch->batchSize;
+	CUdeviceptr devStateV, devNOutRes, devOutResV;
 
-	size_t cudaParamIntVSize = sizeof(int) * batch->N;
-	size_t cudaParamIntSize  = sizeof(int);
+	cuMemAlloc(&devStateV, sizeof(int) * batch->N);
+	cuMemAlloc(&devNOutRes, sizeof(int));
+	cuMemAlloc(&devOutResV, sizeof(int) * batch->batchSize);
 
-	for (int i = 0; i < batch->batchSize; i++)
-	{
-		LibFkpsBatchIncrement(batch);
+	cuMemcpyHtoD(devStateV, batch->v, sizeof(int) * batch->N);
 
-		CUdeviceptr* devX		= xV + i;
-		CUdeviceptr* devOutRes = outResV + i;
-
-		cuMemAlloc(devX, cudaParamIntVSize);
-		cuMemAlloc(devOutRes, cudaParamIntSize);
-
-		cuMemcpyHtoD(*devX, batch->v, cudaParamIntVSize);
-
-		void* args[] = {devX, devOutRes};
-		resCode = cudaLaunchKernel(function, 1, 1, args);
-	}
+	void* args[] = { &devBatchSize, &devStateV, &devNOutRes, &devOutResV };
+	cuLaunchKernel(*function, 1, 1, 1, 1, 1, 1, 0, NULL, args, 0);
 
 	cuCtxSynchronize();
 
-	int* inX = new int[batch->N];
-	for (int i = 0; i < batch->batchSize; i++)
-	{
-		int outRes;
-		cuMemcpyDtoH(&outRes, outResV[i], cudaParamIntSize);
+	int* hostNOutRes = new int;
+	int* hostOutResV;
 
-		if (outRes == 0)
-		{
-			cuMemcpyDtoH(inX, xV[i], cudaParamIntVSize);
-			if (LibFkpsBatchAdd(batch, inX) == LIBFKPS_ERR_PARTITION_FULL)
-				LibFkpsBatchFlush(batch, _lib);
-		}
-	}
-	delete[] inX;
-	LibFkpsBatchFlush(batch, _lib);
+	cuMemcpyDtoH(&hostNOutRes, devNOutRes, sizeof(int));
+	hostOutResV = new int[*hostNOutRes];
+	cuMemcpyDtoH(&hostOutResV, devOutResV, sizeof(int));
+
+	cuMemFree(devStateV);
+	cuMemFree(devNOutRes);
+	cuMemFree(devOutResV);
+	
+	delete hostNOutRes;
+	delete[] hostOutResV;
 }
 
 
@@ -79,6 +67,7 @@ LibFkpsErr_t LibFkpsSolve(FKPS lib, bool verbose)
 
 	FKPSBatch state;
 	std::vector<FKPSBatch> batchV;
+	std::vector<std::thread*> threadV;
 
 	errCode = LibFkpsBatchInit(lib, &state);
 	if (errCode != LIBFKPS_ERR_SUCCESS)
@@ -89,10 +78,13 @@ LibFkpsErr_t LibFkpsSolve(FKPS lib, bool verbose)
 		FKPSBatch batch;
 		if (LibFkpsBatchNew(state, &batch) == LIBFKPS_ERR_PARTITION_END)
 			break;
-		batchV.push_back(batch);
 		cudaSolve(lib, batch);
+		batchV.push_back(batch);
 	}
 
+	for (FKPSBatch batch : batchV)
+		LibFkpsBatchFree(batch);
+	
 	LibFkpsBatchFree(state);
 	return LIBFKPS_ERR_SUCCESS;
 }
